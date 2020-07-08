@@ -1,0 +1,23 @@
+{
+    "env": "debug",
+    "port": 8085,
+    "db": {
+        "host": "122.51.244.208",
+        "database": "deploy",
+        "username": "deploy",
+        "password": "6bbK5pU0mO1oomJd",
+        "port": 3306,
+        "charset": "utf8",
+        "timeout": 10,
+        "maxOpenConnects": 50,
+        "maxIdleConnects": 10
+    },
+    "jwt-signing-key": "deploy-corey",
+    "captcha": {
+        "long": 4,
+        "width": 75,
+        "height": 35
+    },
+    "repo": "/tmp/_repo",
+    "repo_package": "/tmp/_repo/_package"
+}
