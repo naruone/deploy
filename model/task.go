@@ -1,7 +1,10 @@
 package model
 
 import (
+    "deploy/model/request"
     "errors"
+    "fmt"
+    "strings"
     "time"
 )
 
@@ -24,12 +27,16 @@ type EnvProServer struct {
     EnvId      int       `json:"env_id" gorm:"PRIMARY_KEY"`
     EnvName    string    `json:"env_name"`
     ProjectId  int       `json:"project_id"`
-    ServerId   int       `json:"server_id"`
+    ServerIds  string    `json:"server_ids"`
     JumpServer int       `json:"jump_server"`
     LastVer    string    `json:"last_ver"`
     Uuid       string    `json:"uuid"`
     CreateAt   time.Time `json:"create_at"`
     UpdateAt   time.Time `json:"update_at"`
+    Servers    []Server
+    Jumper     Server
+    Project    Project
+    //自定义shell需要时再增加字段
 }
 
 const (
@@ -70,4 +77,52 @@ func IsServerUsed(serverId int) (err error) {
         err = errors.New("该服务已被占用, 请先删除对应配置")
     }
     return
+}
+
+func GetEnvCfgList(search *request.ComPageInfo) (envList []EnvProServer, total int, err error) {
+    db := mdb
+    if search.Condition != "" && search.SearchValue != "" {
+        db = db.Where(search.Condition+" = ?", search.SearchValue)
+    }
+    if err = db.Model(&envList).Count(&total).Error; err != nil {
+        return
+    }
+    if err = db.Limit(search.PageSize).Offset(search.PageSize * (search.CurrentPage - 1)).Find(&envList).Error; err != nil {
+        return
+    }
+    for idx, li := range envList {
+        fmt.Println(li)
+        db.Where("project_id = ?", li.ProjectId).First(&envList[idx].Project)
+        db.Where("server_id in (?)", strings.Split(li.ServerIds, ",")).Find(&envList[idx].Servers)
+        if li.JumpServer != 0 {
+            db.Where("server_id = ?", li.JumpServer).First(&envList[idx].Jumper)
+        }
+    }
+    return
+}
+
+func SaveEnvCfg(env *EnvProServer) (err error) {
+
+    return
+}
+
+func DelEnvCfg(cfgId int) (err error) {
+    return mdb.Delete(EnvProServer{}, "env_id = ?", cfgId).Error
+}
+
+func CheckDelTask(envId int) (err error) {
+    var c int
+    if err = mdb.Where("env_id = ?", envId).
+        Where("status != ? and status != ? and status != ?", TaskPrePare, TaskRunSuccess, TaskRunFail).
+        Model(&DeployTask{}).Count(&c).Error; err != nil {
+        return
+    }
+    if c > 0 {
+        err = errors.New("当前有发布中的任务, 请处理掉再删除")
+    }
+    return
+}
+
+func DelTaskByEnvId(envId int) (err error) {
+    return mdb.Delete(DeployTask{}, "env_id = ?", envId).Error
 }

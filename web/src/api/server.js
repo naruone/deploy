@@ -17,7 +17,7 @@ export const saveServer = (data) => {
     })
 }
 
-// 删除项目
+// 删除服务器
 export const delServer = (data) => {
     return service({
         url: "/server/deleteServer",

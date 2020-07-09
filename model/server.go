@@ -40,8 +40,7 @@ func GetServerList(search *request.ComPageInfo) (serverList []Server, total int,
 }
 
 func DelServer(serverId int) (err error) {
-    err = mdb.Delete(Server{}, "server_id = ?", serverId).Error
-    return
+    return mdb.Delete(Server{}, "server_id = ?", serverId).Error
 }
 
 func SaveServer(p *Server) (err error) {

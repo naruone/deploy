@@ -101,6 +101,5 @@ func UpdatePwd(userId int, password string, oPwd string) (err error) {
         err = errors.New("旧密码错误")
         return
     }
-    err = mdb.Model(&user).Update("password", utils.MD5V([]byte(password))).Error
-    return
+    return mdb.Model(&user).Update("password", utils.MD5V([]byte(password))).Error
 }

@@ -37,7 +37,6 @@
                     label="用户昵称">
             </el-table-column>
             <el-table-column
-                    prop="status"
                     :formatter="userStatus"
                     label="用户状态">
             </el-table-column>

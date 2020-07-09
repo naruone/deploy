@@ -53,7 +53,7 @@ func InitRouters() (router *gin.Engine) {
 
     envCfgRouter := routerGroup.Group("envCfg").Use(middleware.JWTAuth())
     {
-        envCfgRouter.POST("getEnvCfg", api.GetEnvCfgList)
+        envCfgRouter.POST("getEnvCfgList", api.GetEnvCfgList)
         envCfgRouter.POST("saveEnvCfg", api.SaveEnvCfg)
         envCfgRouter.GET("delEnvCfg", api.DelEnvCfg)
     }

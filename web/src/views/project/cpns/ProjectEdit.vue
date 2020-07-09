@@ -38,12 +38,6 @@
 
     export default {
         name: "ProjectEdit",
-        props: {
-            dialog: {
-                type: Boolean,
-                default: false
-            },
-        },
         data() {
             return {
                 showDialog: false,

@@ -31,7 +31,6 @@
                     width="50">
             </el-table-column>
             <el-table-column
-                    prop="type"
                     label="服务器类型"
                     :formatter="serverType"
                     width="120">

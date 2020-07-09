@@ -7,28 +7,23 @@
             size="35%"
             direction="rtl">
         <div style="height: calc(100vh - 75px);overflow-y: scroll">
-            <el-form :model="serverForm" :rules="serverRules" class="drawerForm" label-width="100px"
+            <el-form :model="cfgForm" :rules="serverRules" class="drawerForm" label-width="100px"
                      ref="serverForm">
-                <el-form-item label="服务器类型" prop="type">
-                    <el-select v-model="serverForm.type">
-                        <el-option v-for="v in sType" :key="v.value" :label="v.label" :value="v.value"/>
-                    </el-select>
-                </el-form-item>
                 <el-form-item label="服务器地址" prop="ssh_addr">
-                    <el-input ref="pInput" v-model="serverForm.ssh_addr" autocomplete="off"></el-input>
+                    <el-input ref="pInput" v-model="cfgForm.ssh_addr" autocomplete="off"></el-input>
                 </el-form-item>
                 <el-form-item label="端口" prop="ssh_port">
-                    <el-input v-model.number="serverForm.ssh_port" autocomplete="off"></el-input>
+                    <el-input v-model.number="cfgForm.ssh_port" autocomplete="off"></el-input>
                 </el-form-item>
                 <el-form-item label="用户名" prop="ssh_user">
-                    <el-input v-model="serverForm.ssh_user" autocomplete="off"></el-input>
+                    <el-input v-model="cfgForm.ssh_user" autocomplete="off"></el-input>
                 </el-form-item>
                 <el-form-item label="秘钥" prop="ssh_key">
-                    <el-input :autosize="{maxRows:10,minRows:4}" type="textarea" v-model="serverForm.ssh_key"
+                    <el-input :autosize="{maxRows:10,minRows:4}" type="textarea" v-model="cfgForm.ssh_key"
                               autocomplete="off"></el-input>
                 </el-form-item>
                 <el-form-item label="工作目录" prop="work_dir">
-                    <el-input v-model="serverForm.work_dir" autocomplete="off"></el-input>
+                    <el-input v-model="cfgForm.work_dir" autocomplete="off"></el-input>
                 </el-form-item>
                 <el-form-item>
                     <el-button @click="handleClose">取 消</el-button>
@@ -43,19 +38,13 @@
     import {saveServer} from "../../../api/server";
 
     export default {
-        name: "ServerEdit",
-        props: {
-            sType: {
-                required: true,
-                type: Array
-            }
-        },
+        name: "CfgEdit",
         data() {
             return {
                 showDialog: false,
                 fieldDisabled: false,
-                serverForm: {
-                    server_id: 0,
+                cfgForm: {
+                    env_id: 0,
                     type: 1,
                     ssh_addr: '',
                     ssh_port: 22,

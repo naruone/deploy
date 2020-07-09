@@ -30,3 +30,7 @@ body {
 .el-drawer:focus, .el-drawer > header > span:focus {
     outline: 0;
 }
+
+.el-table .pre-line .cell { /*table cell 单元格\n换行*/
+    white-space: pre-line;
+}
