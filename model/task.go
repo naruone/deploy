@@ -116,7 +116,7 @@ func SaveEnvCfg(env *EnvProServer) (err error) {
 	if err != nil {
 		switch {
 		case strings.Index(err.Error(), "uniq-env_name") != -1:
-			err = errors.New("该用配置名已存在")
+			err = errors.New("该配置名已存在")
 		case strings.Index(err.Error(), "uniq-pro-sv-js") != -1:
 			err = errors.New("该项目-目标机-跳板机已存在")
 		}
