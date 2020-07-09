@@ -27,7 +27,7 @@ export const delEnvCfg = (data) => {
 
 export const getCfgSelectOptions = (data) => {
     return service({
-        url: "/envCfg/delEnvCfg",
+        url: "/envCfg/getCfgOptions",
         method: 'get',
         params: data
     })

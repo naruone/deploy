@@ -110,43 +110,33 @@
                 this.cfgForm.server_ids = []
                 this.$refs.cfgForm.clearValidate()
                 this.showDialog = false
+                this.projectOptions = []
+                this.serverOptions = []
+                this.jumperOptions = []
             },
             async getSelVal() {
                 await getCfgSelectOptions().then((res) => {
-
+                    for (let v of res.data['projects']) {
+                        this.projectOptions.push({
+                            label: v.project_name,
+                            value: v.project_id
+                        })
+                    }
+                    for (let v of res.data['servers']) {
+                        if (v.type === 1) { //目标机
+                            this.serverOptions.push({
+                                label: v.ssh_addr,
+                                value: v.server_id
+                            })
+                        } else {//服务器
+                            this.jumperOptions.push({
+                                label: v.ssh_addr,
+                                value: v.server_id
+                            })
+                        }
+                    }
                 }).catch(() => {
-
                 })
-                this.projectOptions = [
-                    {
-                        label: "hello",
-                        value: 1
-                    },
-                    {
-                        label: "world",
-                        value: 2
-                    }
-                ]
-                this.serverOptions = [
-                    {
-                        label: "hello",
-                        value: 1
-                    },
-                    {
-                        label: "world",
-                        value: 2
-                    }
-                ]
-                this.jumperOptions = [
-                    {
-                        label: "hello",
-                        value: 1
-                    },
-                    {
-                        label: "world",
-                        value: 2
-                    }
-                ]
             }
         }
     }
