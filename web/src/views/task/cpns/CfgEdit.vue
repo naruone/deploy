@@ -4,30 +4,31 @@
             :before-close="handleClose"
             :visible.sync="showDialog"
             @opened="()=>{this.$refs.pInput.focus()}"
-            size="35%"
             direction="rtl">
         <div style="height: calc(100vh - 75px);overflow-y: scroll">
-            <el-form :model="cfgForm" :rules="serverRules" class="drawerForm" label-width="100px"
-                     ref="serverForm">
-                <el-form-item label="服务器地址" prop="ssh_addr">
-                    <el-input ref="pInput" v-model="cfgForm.ssh_addr" autocomplete="off"></el-input>
+            <el-form :model="cfgForm" :rules="cfgRules" class="drawerForm" label-width="100px"
+                     ref="cfgForm">
+                <el-form-item label="环境名称" prop="env_name">
+                    <el-input ref="pInput" v-model="cfgForm.env_name" autocomplete="off"></el-input>
                 </el-form-item>
-                <el-form-item label="端口" prop="ssh_port">
-                    <el-input v-model.number="cfgForm.ssh_port" autocomplete="off"></el-input>
+                <el-form-item label="项目" prop="project_id">
+                    <el-select v-model="cfgForm.project_id">
+                        <el-option v-for="v in projectOptions" :key="v.value" :label="v.label" :value="v.value"/>
+                    </el-select>
                 </el-form-item>
-                <el-form-item label="用户名" prop="ssh_user">
-                    <el-input v-model="cfgForm.ssh_user" autocomplete="off"></el-input>
+                <el-form-item label="目标机" prop="server_ids">
+                    <el-select multiple v-model="cfgForm.server_ids" placeholder="请选择目标机">
+                        <el-option v-for="v in serverOptions" :key="v.value" :label="v.label" :value="v.value"/>
+                    </el-select>
                 </el-form-item>
-                <el-form-item label="秘钥" prop="ssh_key">
-                    <el-input :autosize="{maxRows:10,minRows:4}" type="textarea" v-model="cfgForm.ssh_key"
-                              autocomplete="off"></el-input>
-                </el-form-item>
-                <el-form-item label="工作目录" prop="work_dir">
-                    <el-input v-model="cfgForm.work_dir" autocomplete="off"></el-input>
+                <el-form-item label="跳板机" prop="jump_server">
+                    <el-select v-model="cfgForm.jump_server">
+                        <el-option v-for="v in jumperOptions" :key="v.value" :label="v.label" :value="v.value"/>
+                    </el-select>
                 </el-form-item>
                 <el-form-item>
                     <el-button @click="handleClose">取 消</el-button>
-                    <el-button type="primary" @click="serverSave">确 定</el-button>
+                    <el-button type="primary" @click="cfgSave">确 定</el-button>
                 </el-form-item>
             </el-form>
         </div>
@@ -35,7 +36,7 @@
 </template>
 
 <script>
-    import {saveServer} from "../../../api/server";
+    import {getCfgSelectOptions, saveEnvCfg} from "../../../api/env_cfg";
 
     export default {
         name: "CfgEdit",
@@ -45,42 +46,40 @@
                 fieldDisabled: false,
                 cfgForm: {
                     env_id: 0,
-                    type: 1,
-                    ssh_addr: '',
-                    ssh_port: 22,
-                    ssh_user: '',
-                    ssh_key: '',
-                    work_dir: '/opt/_repo'
+                    env_name: '',
+                    project_id: 0,
+                    server_ids: [],
+                    jump_server: 0
                 },
-                serverRules: {
-                    type: [
-                        {required: true, message: '服务器类型必选', trigger: 'blur'},
-                        {type: 'enum', enum: [1, 2], message: '请选择正确的服务器类型', trigger: 'change'},
-                    ],
-                    ssh_addr: [
-                        {required: true, message: '请输入服务器地址', trigger: 'blur'},
-                    ],
-                    ssh_port: [
-                        {required: true, type: 'integer', message: '请输入正确的端口', trigger: 'blur'},
-                    ],
-                    ssh_user: [
-                        {required: true, message: '用户名必填', trigger: 'blur'},
+                cfgRules: {
+                    env_name: [
+                        {required: true, message: '环境名称必填', trigger: 'blur'},
                         {min: 3, max: 200, message: '长度在3到200个字符', trigger: 'blur'}
                     ],
-                    ssh_key: [
-                        {max: 5000, message: '长度小于5000个字符', trigger: 'blur'}
+                    project_id: [
+                        {required: true, message: '项目必选', trigger: 'change'},
                     ],
-                    work_dir: [
-                        {required: true, message: '工作目录必填', trigger: 'blur'},
+                    server_ids: [
+                        {required: true, message: '目标机必选', trigger: 'blur'},
                     ]
-                }
+                },
+                projectOptions: [],
+                serverOptions: [],
+                jumperOptions: []
+            }
+        },
+        watch: {
+            showDialog(n) {
+                if (n) this.getSelVal()
             }
         },
         methods: {
-            serverSave() {
-                this.$refs.serverForm.validate(async (valid) => {
+            cfgSave() {
+                this.$refs.cfgForm.validate(async (valid) => {
                     if (valid) {
-                        await saveServer(this.serverForm).then((res) => {
+                        let formData = Object.assign({}, this.cfgForm);
+                        formData.server_ids = formData.server_ids.join(',')
+                        await saveEnvCfg(formData).then((res) => {
                             this.$message({
                                 type: 'success',
                                 message: res.msg,
@@ -94,22 +93,60 @@
                 })
             },
             setEditVal(row) {
-                for (let k in this.serverForm) {
-                    this.$set(this.serverForm, k, row[k] ? row[k] : '')
+                for (let k in this.cfgForm) {
+                    this.$set(this.cfgForm, k, row[k] ? row[k] : '')
                 }
-                if (Object.keys(row).length === 0) {
-                    this.serverForm.type = 1
-                    this.serverForm.ssh_port = 22
-                    this.serverForm.work_dir = '/opt/_repo'
+                if (typeof this.cfgForm.server_ids === 'string' && String(this.cfgForm.server_ids) !== '') {
+                    this.cfgForm.server_ids = this.cfgForm.server_ids.split(',').map((v) => {
+                        return Number(v)
+                    })
                 }
                 this.showDialog = true
             },
             handleClose() {
-                for (let k in this.serverForm) {
-                    this.$set(this.serverForm, k, '')
+                for (let k in this.cfgForm) {
+                    this.$set(this.cfgForm, k, '')
                 }
-                this.$refs.serverForm.clearValidate()
+                this.cfgForm.server_ids = []
+                this.$refs.cfgForm.clearValidate()
                 this.showDialog = false
+            },
+            async getSelVal() {
+                await getCfgSelectOptions().then((res) => {
+
+                }).catch(() => {
+
+                })
+                this.projectOptions = [
+                    {
+                        label: "hello",
+                        value: 1
+                    },
+                    {
+                        label: "world",
+                        value: 2
+                    }
+                ]
+                this.serverOptions = [
+                    {
+                        label: "hello",
+                        value: 1
+                    },
+                    {
+                        label: "world",
+                        value: 2
+                    }
+                ]
+                this.jumperOptions = [
+                    {
+                        label: "hello",
+                        value: 1
+                    },
+                    {
+                        label: "world",
+                        value: 2
+                    }
+                ]
             }
         }
     }

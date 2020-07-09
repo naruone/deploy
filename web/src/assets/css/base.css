@@ -31,6 +31,10 @@ body {
     outline: 0;
 }
 
+.el-drawer .drawerForm .el-select {
+    width: 100%;
+}
+
 .el-table .pre-line .cell { /*table cell 单元格\n换行*/
     white-space: pre-line;
 }

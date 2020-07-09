@@ -24,3 +24,12 @@ export const delEnvCfg = (data) => {
         params: data
     })
 }
+
+export const getCfgSelectOptions = (data) => {
+    return service({
+        url: "/envCfg/delEnvCfg",
+        method: 'get',
+        params: data
+    })
+}
+

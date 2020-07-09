@@ -3,7 +3,6 @@ package model
 import (
     "deploy/model/request"
     "errors"
-    "fmt"
     "strings"
     "time"
 )
@@ -91,11 +90,10 @@ func GetEnvCfgList(search *request.ComPageInfo) (envList []EnvProServer, total i
         return
     }
     for idx, li := range envList {
-        fmt.Println(li)
-        db.Where("project_id = ?", li.ProjectId).First(&envList[idx].Project)
-        db.Where("server_id in (?)", strings.Split(li.ServerIds, ",")).Find(&envList[idx].Servers)
+        mdb.Where("project_id = ?", li.ProjectId).First(&envList[idx].Project)
+        mdb.Where("server_id in (?)", strings.Split(li.ServerIds, ",")).Find(&envList[idx].Servers)
         if li.JumpServer != 0 {
-            db.Where("server_id = ?", li.JumpServer).First(&envList[idx].Jumper)
+            mdb.Where("server_id = ?", li.JumpServer).First(&envList[idx].Jumper)
         }
     }
     return
