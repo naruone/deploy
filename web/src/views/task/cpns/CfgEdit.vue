@@ -65,7 +65,10 @@
                 },
                 projectOptions: [],
                 serverOptions: [],
-                jumperOptions: []
+                jumperOptions: [{
+                    label: '请选择',
+                    value: 0
+                }]
             }
         },
         watch: {
@@ -112,7 +115,10 @@
                 this.showDialog = false
                 this.projectOptions = []
                 this.serverOptions = []
-                this.jumperOptions = []
+                this.jumperOptions = [{
+                    label: '请选择',
+                    value: 0
+                }]
             },
             async getSelVal() {
                 await getCfgSelectOptions().then((res) => {
@@ -128,7 +134,7 @@
                                 label: v.ssh_addr,
                                 value: v.server_id
                             })
-                        } else {//服务器
+                        } else {//跳板机
                             this.jumperOptions.push({
                                 label: v.ssh_addr,
                                 value: v.server_id
