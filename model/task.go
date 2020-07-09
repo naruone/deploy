@@ -103,20 +103,8 @@ func SaveEnvCfg(env *EnvProServer) (err error) {
 	if env.EnvId == 0 {
 		env.CreateAt = time.Now()
 		env.UpdateAt = time.Now()
-
 		err = mdb.Save(env).Error
 	} else {
-		/*
-		   EnvId      int       `json:"env_id" gorm:"PRIMARY_KEY"`
-		      EnvName    string    `json:"env_name"`
-		      ProjectId  int       `json:"project_id"`
-		      ServerIds  string    `json:"server_ids"`
-		      JumpServer int       `json:"jump_server"`
-		      LastVer    string    `json:"last_ver"`
-		      Uuid       string    `json:"uuid"`
-		      CreateAt   time.Time `json:"create_at"`
-		      UpdateAt   time.Time `json:"update_at"`
-		*/
 		err = mdb.Model(env).Updates(map[string]interface{}{
 			"env_name":    env.EnvName,
 			"project_id":  env.ProjectId,
