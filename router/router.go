@@ -55,6 +55,7 @@ func InitRouters() (router *gin.Engine) {
     taskRouter := routerGroup.Group("task").Use(middleware.JWTAuth())
     {
         taskRouter.POST("getTaskList", api.GetTaskList)
+        taskRouter.POST("saveTask", api.SaveTask)
         taskRouter.GET("getBranches", api.GetBranches)
         taskRouter.GET("getVersions", api.GetVersions)
         taskRouter.GET("getEnvOptions", api.GetEnvOptions)

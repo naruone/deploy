@@ -14,6 +14,7 @@ type DeployTask struct {
     Description string    `json:"description"`
     ErrOutput   string    `json:"err_output"`
     EnvId       int       `json:"env_id"`
+    Branch      string    `json:"branch"`
     Version     string    `json:"version"`
     AfterScript string    `json:"after_script"`
     Status      int       `json:"status"`

@@ -43,6 +43,11 @@
                 label="发布类型">
             </el-table-column>
             <el-table-column
+                prop="branch"
+                width="80"
+                label="分支">
+            </el-table-column>
+            <el-table-column
                 prop="version"
                 width="80"
                 label="版本">
