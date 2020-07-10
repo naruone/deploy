@@ -72,9 +72,9 @@ func CaptchaImg(c *gin.Context) {
 func GetUserList(c *gin.Context) {
     var (
         pageInfo request.ComPageInfo
-        list       []model.User
-        total      int
-        err        error
+        list     []model.User
+        total    int
+        err      error
     )
     _ = c.ShouldBindJSON(&pageInfo)
     if list, total, err = service.UserList(&pageInfo); err != nil {
