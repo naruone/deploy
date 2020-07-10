@@ -22,6 +22,13 @@ type Repository struct {
     cLock       sync.Mutex
 }
 
+//删除项目时删除缓存
+func DelRepository(projectId uint) {
+    if Repos[projectId] != nil {
+        delete(Repos, projectId)
+    }
+}
+
 func GetRepository(project *model.Project) *Repository {
     rLock.Lock()
     defer rLock.Unlock()
@@ -97,8 +104,9 @@ func (repo *Repository) GetVersions(branch string) (result []model.CsvVersion, e
 
 func (repo *Repository) Package(startVer, endVer, name string) (filename string, delFiles []string, err error) {
     var (
-        cmd      string
-        _delFile string
+        cmd       string
+        _delFile  string
+        errOutput string
     )
     filename = repo.PackagePath + name
     if startVer == "" {
@@ -114,7 +122,9 @@ func (repo *Repository) Package(startVer, endVer, name string) (filename string,
         }
         delFiles = _dFiles
     }
-    _, _, err = utils.RunCmd(repo.Path, "/bin/bash", "-c", cmd)
+    if _, errOutput, err = utils.RunCmd(repo.Path, "/bin/bash", "-c", cmd); err != nil {
+        err = errors.New(err.Error() + "\n Output: " + errOutput)
+    }
     return
 }
 

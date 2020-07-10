@@ -64,7 +64,7 @@
                     <el-tooltip v-if="scope.row.status === 9" placement="top-end" effect="dark">
                         <div slot="content">
                             失败原因:
-                            <pre>{{scope.row.err_output}}</pre>
+                            <pre>{{scope.row.output}}</pre>
                         </div>
                         <el-tag type="danger" size="mini">{{ status[scope.row.status] }}</el-tag>
                     </el-tooltip>
@@ -83,7 +83,8 @@
             <el-table-column align="center" label="操作">
                 <template slot-scope="scope">
                     <el-tooltip v-if="scope.row.status === 1" content="发布" placement="top" effect="dark">
-                        <el-button type="primary" icon="el-icon-upload" circle></el-button>
+                        <el-button @click="deployTask(scope.row)" type="primary" icon="el-icon-upload"
+                                   circle></el-button>
                     </el-tooltip>
                     <el-button v-if="scope.row.status === 1 || scope.row.status === 9" type="danger"
                                icon="el-icon-delete" circle
@@ -110,7 +111,7 @@
 <script>
     import tableInfo from "../../plugins/mixins/tableInfo";
     import TaskEdit from "./cpns/TaskEdit";
-    import {getTaskList, deleteTask} from "../../api/task";
+    import {getTaskList, deleteTask, deployTask} from "../../api/task";
 
     export default {
         name: "TaskList",
@@ -141,6 +142,27 @@
         },
         methods: {
             getList: getTaskList,
+            async deployTask(row) {
+                this.$confirm('确定发布?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(async () => {
+                    await deployTask({task_id: row.task_id}).then((res) => {
+                        this.$message({
+                            type: 'success',
+                            message: res.msg
+                        })
+                        this.getTableData()
+                    }).catch(() => {
+                    })
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消'
+                    })
+                })
+            },
             editTask() {
                 this.$refs.taskEditorFormDrawer.setEditVal()
             },

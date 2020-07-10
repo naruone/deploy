@@ -37,7 +37,7 @@ func GetTaskList(c *gin.Context) {
 func DeleteTask(c *gin.Context) {
     var (
         taskId int
-        err     error
+        err    error
     )
     if taskId, err = strconv.Atoi(c.Query("task_id")); err != nil {
         utils.FailWithMessage(err.Error(), c)
@@ -113,15 +113,15 @@ func GetBranches(c *gin.Context) {
 
 func Deploy(c *gin.Context) {
     var (
-        err       error
-        projectId int
+        err    error
+        taskId int
     )
-    if projectId, err = strconv.Atoi(c.Query("project_id")); err != nil {
+    if taskId, err = strconv.Atoi(c.Query("task_id")); err != nil {
         utils.FailWithMessage(err.Error(), c)
         return
     }
 
-    if err = service.Deploy(projectId); err != nil {
+    if err = service.Deploy(taskId); err != nil {
         utils.FailWithMessage(err.Error(), c)
         return
     }

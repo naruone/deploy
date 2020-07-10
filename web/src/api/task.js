@@ -47,3 +47,11 @@ export const getVersions = (data) => {
         params: data
     })
 }
+
+export const deployTask = (data) => {
+    return service({
+        url: "/task/deploy",
+        method: 'get',
+        params: data
+    })
+}

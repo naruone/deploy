@@ -12,7 +12,7 @@ type DeployTask struct {
     TaskName    string    `json:"task_name"`
     DeployType  int       `json:"deploy_type"`
     Description string    `json:"description"`
-    ErrOutput   string    `json:"err_output"`
+    Output      string    `json:"output"`
     EnvId       int       `json:"env_id"`
     Branch      string    `json:"branch"`
     Version     string    `json:"version"`
@@ -51,9 +51,40 @@ const (
     DeployTypeAll      = 2 //全量发布
 )
 
+//csv 响应前端结构
 type CsvVersion struct {
     Version string
     Message string
+}
+
+//任务准备
+type TaskPrepare struct {
+    Task    DeployTask
+    Env     EnvProServer
+    Servers []Server
+    Jumper  Server
+    Project Project
+}
+
+//任务调度参数结构
+type DeployTaskRunParams struct {
+    Server      Server //当前发布目标机
+    Task        DeployTask
+    Env         EnvProServer
+    Project     Project
+    ResChan     chan *DeployTaskResult
+    PackagePath string //包全路径地址
+    PackageName string //文件名 xxx.tar.gz
+    PackageUuid string
+    AfterScript string //预定义的after_shell
+}
+
+//任务结果
+type DeployTaskResult struct {
+    Server      Server //结果对应的服务器
+    ResStatus   int    //结果状态
+    Output      string //错误输出
+    PackagePath string //包全路径地址
 }
 
 func DeleteEnvAndTask(projectId int) (err error) {
@@ -175,6 +206,10 @@ func SaveTask(task *DeployTask) (err error) {
     return
 }
 
+func UpdateTaskStatusAndOutput(taskId int, params map[string]interface{}) {
+    mdb.Model(&DeployTask{TaskId: taskId}).Updates(params)
+}
+
 func DelTask(taskId int) (err error) {
     var task DeployTask
     if err = mdb.Where("task_id = ?", taskId).First(&task).Error; err != nil {
@@ -184,5 +219,24 @@ func DelTask(taskId int) (err error) {
         err = errors.New("该状态的任务不允许被删除")
     }
     err = mdb.Delete(&task).Error
+    return
+}
+
+func PrepareTask(taskId int) (taskPrepare TaskPrepare, err error) {
+    if err = mdb.Where("task_id = ?", taskId).First(&taskPrepare.Task).Error; err != nil {
+        return
+    }
+    if err = mdb.Where("env_id = ?", taskPrepare.Task.EnvId).First(&taskPrepare.Env).Error; err != nil {
+        return
+    }
+    if err = mdb.Where("project_id = ?", taskPrepare.Env.ProjectId).First(&taskPrepare.Project).Error; err != nil {
+        return
+    }
+    if err = mdb.Where("find_in_set(server_id, ?)", taskPrepare.Env.ServerIds).Find(&taskPrepare.Servers).Error; err != nil {
+        return
+    }
+    if taskPrepare.Env.JumpServer != 0 {
+        err = mdb.Where("server_id = ?", taskPrepare.Env.JumpServer).First(&taskPrepare.Jumper).Error
+    }
     return
 }
