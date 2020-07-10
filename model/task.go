@@ -174,3 +174,15 @@ func SaveTask(task *DeployTask) (err error) {
     }
     return
 }
+
+func DelTask(taskId int) (err error) {
+    var task DeployTask
+    if err = mdb.Where("task_id = ?", taskId).First(&task).Error; err != nil {
+        return
+    }
+    if task.Status != TaskPrePare && task.Status != TaskRunFail {
+        err = errors.New("该状态的任务不允许被删除")
+    }
+    err = mdb.Delete(&task).Error
+    return
+}

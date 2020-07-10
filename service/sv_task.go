@@ -12,3 +12,7 @@ func DeployTaskList(search *request.ComPageInfo) ([]model.DeployTask, int, error
 func SaveTask(task *model.DeployTask) error {
     return model.SaveTask(task)
 }
+
+func DelTask(taskId int) error {
+    return model.DelTask(taskId)
+}

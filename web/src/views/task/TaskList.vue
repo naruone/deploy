@@ -110,7 +110,7 @@
 <script>
     import tableInfo from "../../plugins/mixins/tableInfo";
     import TaskEdit from "./cpns/TaskEdit";
-    import {getTaskList} from "../../api/task";
+    import {getTaskList, deleteTask} from "../../api/task";
 
     export default {
         name: "TaskList",
@@ -145,7 +145,25 @@
                 this.$refs.taskEditorFormDrawer.setEditVal()
             },
             delTask(row) {
-
+                this.$confirm('确认删除该任务?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(async () => {
+                    await deleteTask({task_id: row.task_id}).then((res) => {
+                        this.$message({
+                            type: 'success',
+                            message: res.msg
+                        })
+                        this.getTableData()
+                    }).catch(() => {
+                    })
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消'
+                    })
+                })
             },
             timeDisplay(row) {
                 return "C: " + row.create_at + "\nU: " + row.update_at

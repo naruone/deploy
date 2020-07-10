@@ -24,6 +24,14 @@ export const saveTask = (data) => {
     })
 }
 
+export const deleteTask = (data) => {
+    return service({
+        url: "/task/deleteTask",
+        method: 'get',
+        params: data
+    })
+}
+
 export const getBranches = (data) => {
     return service({
         url: "/task/getBranches",

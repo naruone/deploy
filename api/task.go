@@ -34,6 +34,22 @@ func GetTaskList(c *gin.Context) {
     }, "获取成功", c)
 }
 
+func DeleteTask(c *gin.Context) {
+    var (
+        taskId int
+        err     error
+    )
+    if taskId, err = strconv.Atoi(c.Query("task_id")); err != nil {
+        utils.FailWithMessage(err.Error(), c)
+        return
+    }
+    if err = service.DelTask(taskId); err != nil {
+        utils.FailWithMessage("删除失败, 原因:"+err.Error(), c)
+        return
+    }
+    utils.OkWithMessage("删除成功", c)
+}
+
 func GetEnvOptions(c *gin.Context) {
     var (
         search  *request.ComPageInfo
@@ -131,8 +147,8 @@ func SaveTask(c *gin.Context) {
         return
     }
     if err = service.SaveTask(&task); err != nil {
-       utils.FailWithMessage("保存失败,"+err.Error(), c)
-       return
+        utils.FailWithMessage("保存失败,"+err.Error(), c)
+        return
     }
     utils.OkWithMessage("保存成功", c)
 }
