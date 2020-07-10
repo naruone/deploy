@@ -22,54 +22,53 @@
             <el-button @click="editProject({})"><i class="el-icon-plus"></i> 新增项目</el-button>
         </div>
         <el-table
-                :data="tableData"
-                border
-                style="width: 100%">
+            :data="tableData"
+            border
+            style="width: 100%">
             <el-table-column
-                    prop="project_id"
-                    label="ID"
-                    width="50">
+                prop="project_id"
+                label="ID"
+                width="50">
             </el-table-column>
             <el-table-column
-                    prop="project_name"
-                    label="项目名称"
-                    width="120">
+                prop="project_name"
+                label="项目名称"
+                width="120">
             </el-table-column>
             <el-table-column
-                    prop="repo_url"
-                    width="240"
-                    label="仓库地址">
+                prop="repo_url"
+                width="240"
+                label="仓库地址">
             </el-table-column>
             <el-table-column
-                    prop="dst"
-                    label="初始化目录">
+                prop="dst"
+                label="初始化目录">
             </el-table-column>
             <el-table-column
-                    width="200"
-                    prop="web_root"
-                    label="Web目录">
+                width="200"
+                prop="web_root"
+                label="Web目录">
             </el-table-column>
             <el-table-column
-                    width="80"
-                    prop="status"
-                    label="INIT 状态">
+                width="80"
+                label="INIT 状态">
                 <template slot-scope="scope">
-                    <el-popover v-if="scope.row.status === 3" trigger="hover" placement="top">
-                        <p>失败原因: {{ scope.row.err_msg }}</p>
-                        <div slot="reference" class="name-wrapper">
-                            <el-tag type="danger" size="mini">{{ projectStatus(scope.row) }}</el-tag>
+                    <el-tooltip v-if="scope.row.status === 3" effect="dark" placement="top-end">
+                        <div slot="content">
+                            失败原因:
+                            <pre>{{scope.row.err_msg}}</pre>
                         </div>
-                    </el-popover>
+                        <el-tag type="danger" size="mini">{{ projectStatus(scope.row) }}</el-tag>
+                    </el-tooltip>
                     <div v-else>
                         <el-tag size="mini">{{ projectStatus(scope.row) }}</el-tag>
                     </div>
                 </template>
-
             </el-table-column>
             <el-table-column
-                    width="200"
-                    prop="create_at"
-                    label="创建时间">
+                width="200"
+                prop="create_at"
+                label="创建时间">
             </el-table-column>
             <el-table-column align="center" label="操作">
                 <template slot-scope="scope">
@@ -90,13 +89,13 @@
         </el-table>
         <div class="page-content">
             <el-pagination
-                    @size-change="handleSizeChange"
-                    @current-change="handleCurrentChange"
-                    :current-page="currentPage"
-                    :page-sizes="[10, 20, 50, 100]"
-                    :page-size="pageSize"
-                    layout="total, sizes, prev, pager, next, jumper"
-                    :total="total">
+                @size-change="handleSizeChange"
+                @current-change="handleCurrentChange"
+                :current-page="currentPage"
+                :page-sizes="[10, 20, 50, 100]"
+                :page-size="pageSize"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="total">
             </el-pagination>
         </div>
         <ProjectEdit ref="projectEditFormDrawer"></ProjectEdit>

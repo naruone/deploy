@@ -20,6 +20,7 @@ type DeployTask struct {
     Uuid        string    `json:"uuid"`
     CreateAt    time.Time `json:"create_at"`
     UpdateAt    time.Time `json:"update_at"`
+    EnvCfg      EnvProServer
 }
 
 type EnvProServer struct {
@@ -110,7 +111,6 @@ func SaveEnvCfg(env *EnvProServer) (err error) {
             "project_id":  env.ProjectId,
             "server_ids":  env.ServerIds,
             "jump_server": env.JumpServer,
-            "update_at":   time.Now(),
         }).Error
     }
     if err != nil {
@@ -143,4 +143,21 @@ func CheckDelTask(envId int) (err error) {
 
 func DelTaskByEnvId(envId int) (err error) {
     return mdb.Delete(DeployTask{}, "env_id = ?", envId).Error
+}
+
+func GetDeployTaskList(search *request.ComPageInfo) (taskList []DeployTask, total int, err error) {
+    db := mdb
+    if search.Condition != "" && search.SearchValue != "" {
+        db = db.Where(search.Condition+" = ?", search.SearchValue)
+    }
+    if err = db.Model(&taskList).Count(&total).Error; err != nil {
+        return
+    }
+    if err = db.Limit(search.PageSize).Offset(search.PageSize * (search.CurrentPage - 1)).Find(&taskList).Error; err != nil {
+        return
+    }
+    for idx, tl := range taskList {
+        mdb.Where("env_id = ?", tl.EnvId).First(&taskList[idx].EnvCfg)
+    }
+    return
 }

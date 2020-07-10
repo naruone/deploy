@@ -23,12 +23,11 @@
             <el-table-column
                     prop="env_id"
                     label="ID"
-                    width="50">
+                    width="40">
             </el-table-column>
             <el-table-column
                     prop="env_name"
-                    label="环境名称"
-                    width="120">
+                    label="环境名称">
             </el-table-column>
             <el-table-column
                     prop="Project.project_name"
@@ -44,14 +43,18 @@
                     label="跳板机">
             </el-table-column>
             <el-table-column
-                    width="200"
                     prop="last_ver"
                     label="最近版本">
             </el-table-column>
             <el-table-column
-                    width="200"
+                    width="150"
                     prop="uuid"
                     label="UUID">
+            </el-table-column>
+            <el-table-column
+                width="200"
+                prop="create_at"
+                label="创建时间">
             </el-table-column>
             <el-table-column align="center" label="操作">
                 <template slot-scope="scope">

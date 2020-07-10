@@ -44,19 +44,20 @@ func InitRouters() (router *gin.Engine) {
         repoRouter.GET("delProject", api.DelProject)
     }
 
-    taskRouter := routerGroup.Group("task").Use(middleware.JWTAuth())
-    {
-        taskRouter.GET("getBranches", api.GetBranches)
-        taskRouter.GET("getVersions", api.GetVersions)
-        taskRouter.GET("deploy", api.Deploy) //x
-    }
-
     envCfgRouter := routerGroup.Group("envCfg").Use(middleware.JWTAuth())
     {
         envCfgRouter.POST("getEnvCfgList", api.GetEnvCfgList)
         envCfgRouter.POST("saveEnvCfg", api.SaveEnvCfg)
         envCfgRouter.GET("delEnvCfg", api.DelEnvCfg)
         envCfgRouter.GET("getCfgOptions", api.GetCfgOptions)
+    }
+
+    taskRouter := routerGroup.Group("task").Use(middleware.JWTAuth())
+    {
+        taskRouter.POST("getTaskList", api.GetTaskList)
+        taskRouter.GET("getBranches", api.GetBranches)
+        taskRouter.GET("getVersions", api.GetVersions)
+        taskRouter.GET("deploy", api.Deploy)
     }
     return
 }

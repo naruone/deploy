@@ -2,6 +2,8 @@ package api
 
 import (
     "deploy/model"
+    "deploy/model/request"
+    "deploy/model/response"
     "deploy/utils"
     "github.com/gin-gonic/gin"
     "strconv"
@@ -11,6 +13,26 @@ import (
 import (
     "deploy/service"
 )
+
+func GetTaskList(c *gin.Context) {
+    var (
+        pageInfo request.ComPageInfo
+        list     []model.DeployTask
+        total    int
+        err      error
+    )
+    _ = c.ShouldBindJSON(&pageInfo)
+    if list, total, err = service.DeployTaskList(&pageInfo); err != nil {
+        utils.FailWithMessage("获取失败, Message: "+err.Error(), c)
+        return
+    }
+    utils.OkDetailed(response.PageResult{
+        List:        list,
+        Total:       total,
+        PageSize:    pageInfo.PageSize,
+        CurrentPage: pageInfo.CurrentPage,
+    }, "获取成功", c)
+}
 
 func GetVersions(c *gin.Context) {
     var (
