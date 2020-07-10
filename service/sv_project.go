@@ -16,11 +16,10 @@ func InitProject(projectId int) (err error) {
     if project, err = model.GetProjectById(projectId, true); err != nil {
         return
     }
-
-    go func(pObj model.Project) {
+    go func(pObj *model.Project) {
         pObj.Status = model.ProjectInitProcessing
-        _ = model.SaveProject(&pObj)
-        Repo := GetRepository(&pObj)
+        _ = model.SaveProject(pObj)
+        Repo := GetRepository(pObj)
         if errOut, err, processing := Repo.CloneRepo(); err != nil {
             if processing {
                 return
@@ -31,8 +30,8 @@ func InitProject(projectId int) (err error) {
             pObj.Status = model.ProjectInitSuccess
             pObj.ErrMsg = ""
         }
-        _ = model.SaveProject(&pObj)
-    }(project)
+        _ = model.SaveProject(pObj)
+    }(&project)
     return
 }
 

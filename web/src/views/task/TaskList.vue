@@ -14,7 +14,7 @@
             </el-form-item>
         </el-form>
         <div class="button-box">
-            <el-button @click="editTask({})"><i class="el-icon-plus"></i> 新增任务</el-button>
+            <el-button @click="editTask"><i class="el-icon-plus"></i> 新增任务</el-button>
         </div>
         <el-table
             :data="tableData"
@@ -80,9 +80,6 @@
                     <el-tooltip v-if="scope.row.status === 1" content="发布" placement="top" effect="dark">
                         <el-button type="primary" icon="el-icon-upload" circle></el-button>
                     </el-tooltip>
-                    <el-button v-if="scope.row.status === 1" type="primary" icon="el-icon-edit" circle
-                               @click="editTask(scope.row)"
-                               slot="reference"></el-button>
                     <el-button v-if="scope.row.status === 1 || scope.row.status === 9" type="danger"
                                icon="el-icon-delete" circle
                                @click="delTask(scope.row)"
@@ -113,7 +110,7 @@
     export default {
         name: "TaskList",
         mixins: [tableInfo],
-        components:{TaskEdit},
+        components: {TaskEdit},
         created() {
             this.getTableData()
         },
@@ -121,11 +118,11 @@
             return {
                 dType: [
                     {
-                        label: "全量",
+                        label: "增量",
                         value: 1
                     },
                     {
-                        label: "增量",
+                        label: "全量",
                         value: 2
                     },
                 ],
@@ -139,8 +136,8 @@
         },
         methods: {
             getList: getTaskList,
-            editTask(row) {
-                this.$refs.taskEditorFormDrawer.setEditVal(row)
+            editTask() {
+                this.$refs.taskEditorFormDrawer.setEditVal()
             },
             delTask(row) {
 

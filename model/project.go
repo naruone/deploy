@@ -66,13 +66,17 @@ func SaveProject(p *Project) (err error) {
         p.UpdateAt = time.Now()
         err = mdb.Save(p).Error
     } else {
-        err = mdb.Model(p).Updates(map[string]interface{}{
+        _params := map[string]interface{}{
             "project_name": p.ProjectName,
             "repo_url":     p.RepoUrl,
             "dst":          p.Dst,
             "web_root":     p.WebRoot,
             "after_script": p.AfterScript,
-        }).Error
+        }
+        if p.Status != 0 {
+            _params["status"] = p.Status
+        }
+        err = mdb.Model(p).Updates(p).Error
     }
     if err != nil {
         switch {

@@ -34,17 +34,44 @@ func GetTaskList(c *gin.Context) {
     }, "获取成功", c)
 }
 
+func GetEnvOptions(c *gin.Context) {
+    var (
+        search  *request.ComPageInfo
+        envList []model.EnvProServer
+        err     error
+    )
+    search = &request.ComPageInfo{
+        BasePageInfo: request.BasePageInfo{
+            CurrentPage: 1,
+            PageSize:    10000,
+            SearchValue: "",
+            Condition:   "",
+        },
+        Status: 0,
+        Type:   0,
+    }
+    if envList, _, err = service.EnvCfgList(search); err != nil {
+        utils.FailWithMessage("获取失败,"+err.Error(), c)
+        return
+    }
+    utils.OkWithData(map[string]interface{}{
+        "envList": envList,
+    }, c)
+}
+
 func GetVersions(c *gin.Context) {
     var (
         res       []model.CsvVersion
         projectId int
+        branch    string
         err       error
     )
     if projectId, err = strconv.Atoi(c.Query("project_id")); err != nil {
         utils.FailWithMessage(err.Error(), c)
         return
     }
-    if res, err = service.GetVersions(projectId, "master"); err != nil {
+    branch = c.Query("branch")
+    if res, err = service.GetVersions(projectId, branch); err != nil {
         utils.FailWithMessage(err.Error(), c)
         return
     }

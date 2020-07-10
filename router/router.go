@@ -57,6 +57,7 @@ func InitRouters() (router *gin.Engine) {
         taskRouter.POST("getTaskList", api.GetTaskList)
         taskRouter.GET("getBranches", api.GetBranches)
         taskRouter.GET("getVersions", api.GetVersions)
+        taskRouter.GET("getEnvOptions", api.GetEnvOptions)
         taskRouter.GET("deploy", api.Deploy)
     }
     return

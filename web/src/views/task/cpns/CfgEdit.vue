@@ -43,7 +43,6 @@
         data() {
             return {
                 showDialog: false,
-                fieldDisabled: false,
                 cfgForm: {
                     env_id: 0,
                     env_name: '',
