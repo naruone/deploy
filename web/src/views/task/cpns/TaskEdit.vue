@@ -1,10 +1,10 @@
 <template>
     <el-drawer
-            title="项目添加/编辑"
-            :before-close="handleClose"
-            :visible.sync="showDialog"
-            @opened="()=>{this.$refs.pInput.focus()}"
-            direction="rtl">
+        title="任务添加/编辑"
+        :before-close="handleClose"
+        :visible.sync="showDialog"
+        @opened="()=>{this.$refs.pInput.focus()}"
+        direction="rtl">
         <div style="height: calc(100vh - 75px);overflow-y: scroll">
             <el-form :model="cfgForm" :rules="cfgRules" class="drawerForm" label-width="100px"
                      ref="cfgForm">
@@ -40,6 +40,12 @@
 
     export default {
         name: "TaskEdit",
+        props: {
+            dType: {
+                required: true,
+                type: Array
+            }
+        },
         data() {
             return {
                 showDialog: false,

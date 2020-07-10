@@ -1,6 +1,6 @@
 <template>
     <el-drawer
-        title="项目添加/编辑"
+        title="服务器添加/编辑"
         :before-close="handleClose"
         :visible.sync="showDialog"
         @opened="()=>{this.$refs.pInput.focus()}"
