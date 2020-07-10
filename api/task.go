@@ -113,5 +113,26 @@ func Deploy(c *gin.Context) {
 }
 
 func SaveTask(c *gin.Context) {
-    
+    var (
+        task       model.DeployTask
+        taskVerify map[string][]string
+        err        error
+    )
+    _ = c.ShouldBindJSON(&task)
+    taskVerify = utils.Rules{
+        "TaskName":    {utils.NotEmpty(), utils.Le("200"), utils.Ge("3")},
+        "Branch":      {utils.NotEmpty()},
+        "Version":     {utils.NotEmpty(), utils.Ge("1"), utils.Le("65535")},
+        "Description": {utils.Le("5000")},
+        "AfterScript": {utils.Le("5000")},
+    }
+    if err = utils.Verify(task, taskVerify); err != nil {
+        utils.FailWithMessage(err.Error(), c)
+        return
+    }
+    if err = service.SaveTask(&task); err != nil {
+       utils.FailWithMessage("保存失败,"+err.Error(), c)
+       return
+    }
+    utils.OkWithMessage("保存成功", c)
 }

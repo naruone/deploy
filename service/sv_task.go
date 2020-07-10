@@ -5,6 +5,10 @@ import (
     "deploy/model/request"
 )
 
-func DeployTaskList(search *request.ComPageInfo)([]model.DeployTask, int , error){
+func DeployTaskList(search *request.ComPageInfo) ([]model.DeployTask, int, error) {
     return model.GetDeployTaskList(search)
+}
+
+func SaveTask(task *model.DeployTask) error {
+    return model.SaveTask(task)
 }

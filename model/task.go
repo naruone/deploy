@@ -162,3 +162,15 @@ func GetDeployTaskList(search *request.ComPageInfo) (taskList []DeployTask, tota
     }
     return
 }
+
+func SaveTask(task *DeployTask) (err error) {
+    if task.TaskId == 0 {
+        task.Status = TaskPrePare
+        task.CreateAt = time.Now()
+        task.UpdateAt = time.Now()
+        err = mdb.Save(task).Error
+    } else {
+        err = errors.New("任务不支持修改, 如要修改, 请删除重建")
+    }
+    return
+}
