@@ -77,18 +77,17 @@ type DeployTaskRunParams struct {
     PackagePath string //包全路径地址
     PackageName string //文件名 xxx.tar.gz
     PackageUuid string
-    AfterScript string //预定义的after_shell
+    DstPath     string //目标机目标文件夹
+    DstFilePath string
+    DeployCmd   string //目标机脚本
 }
 
 //任务结果
 type DeployTaskResult struct {
-    Server      Server //结果对应的服务器
-    Jumper      Server
-    ResStatus   int    //结果状态
-    Output      string //错误输出
-    PackagePath string //包全路径地址
-    SwitchCmd   string //切换软链接||php reload
-    Uuid        string //当前版本文件夹uuid
+    Params    DeployTaskRunParams
+    ResStatus int    //结果状态
+    SwitchCmd string //切换软链接||php reload
+    Output    string //错误输出
 }
 
 func DeleteEnvAndTask(projectId int) (err error) {

@@ -9,6 +9,7 @@ import (
     uuid "github.com/satori/go.uuid"
     "strconv"
     "strings"
+    "sync"
 )
 
 func DeployTaskList(search *request.ComPageInfo) ([]model.DeployTask, int, error) {
@@ -62,10 +63,9 @@ func Deploy(taskId int) (err error) {
 //准备工作 & 调度发布任务
 func deployScheduleStart(prepareTask *model.TaskPrepare) {
     var (
-        params     model.DeployTaskRunParams
-        delFiles   []string //要删除的文件
-        resultChan = make(chan *model.DeployTaskResult)
-        err        error
+        params   model.DeployTaskRunParams
+        delFiles []string //要删除的文件
+        err      error
     )
     model.UpdateTaskStatusAndOutput(prepareTask.Task.TaskId, map[string]interface{}{
         "status": model.TaskStarting,
@@ -75,113 +75,132 @@ func deployScheduleStart(prepareTask *model.TaskPrepare) {
         Task:        prepareTask.Task,
         Env:         prepareTask.Env,
         Project:     prepareTask.Project,
-        ResChan:     resultChan,
+        ResChan:     make(chan *model.DeployTaskResult),
         PackageUuid: uuid.NewV4().String(),
     }
     params.PackageName = params.PackageUuid + ".tar.gz"
+    params.DstPath = strings.TrimRight(params.Server.WorkDir, "/") + "/" + params.PackageUuid
+    params.DstFilePath = strings.TrimRight(params.Server.WorkDir, "/") + "/" + params.PackageName
 
     //全量则上一次版本号不传
     _lastVer := prepareTask.Env.LastVer
     if prepareTask.Task.DeployType == model.DeployTypeAll {
         _lastVer = ""
     }
+    //监听发布任务结果
+    go deployProcessHandle(params.ResChan, prepareTask)
+
     //打包
     if params.PackagePath, delFiles, err = GetRepository(&prepareTask.Project).
         Package(_lastVer, prepareTask.Task.Version, params.PackageName); err != nil {
-        model.UpdateTaskStatusAndOutput(prepareTask.Task.TaskId, map[string]interface{}{
-            "status": model.TaskRunFail,
-            "output": "打包失败, 原因: " + err.Error(),
-        })
+        for _, _srv := range prepareTask.Servers {
+            params.Server = _srv
+            params.ResChan <- &model.DeployTaskResult{
+                Params:    params,
+                ResStatus: model.TaskRunFail,
+                Output:    "打包失败, 原因: " + err.Error(),
+            }
+        }
         return
     }
 
-    //after command 切换软链前执行
-    if len(delFiles) > 0 {
-        params.AfterScript = "rm -f " + strings.Join(delFiles, " ")
-    }
-    if prepareTask.Project.AfterScript != "" {
-        if params.AfterScript == "" {
-            params.AfterScript = prepareTask.Project.AfterScript
-        } else {
-            params.AfterScript = params.AfterScript + " && " + prepareTask.Project.AfterScript
-        }
-    }
-    if prepareTask.Task.AfterScript != "" {
-        if params.AfterScript == "" {
-            params.AfterScript = prepareTask.Task.AfterScript
-        } else {
-            params.AfterScript = params.AfterScript + " && " + prepareTask.Task.AfterScript
-        }
-    }
-
+    //组合目标机
+    getDeployCmd(&params, delFiles)
     if prepareTask.Jumper.ServerId == 0 { //非跳板机
-        go deployProcessHandle(resultChan, prepareTask) //监听发布任务结果
         for _, _srv := range prepareTask.Servers {
             params.Server = _srv
-            go deployStart(params)
+            go deployStartDirect(params)
         }
-    } else {
-        //todo 有跳板逻辑
+    } else { //有跳板逻辑
+        go deployStartByJumper(params, prepareTask)
     }
 }
 
-func deployStart(params model.DeployTaskRunParams) {
+//直接发布(非跳板机)
+func deployStartDirect(params model.DeployTaskRunParams) {
     var (
         serverConn *utils.ServerConn
-        dstFile    string //目标机文件上传路径
-        result     model.DeployTaskResult
-        dstDir     string //解压包路径
-        deployCmd  string
         output     string
         err        error
     )
-    result = model.DeployTaskResult{
-        Server:      params.Server,
-        Jumper:      params.Jumper,
-        PackagePath: params.PackagePath,
-        Uuid:        params.PackageUuid,
-    }
     serverConn = utils.NewServerConn(params.Server.SshAddr+":"+strconv.Itoa(params.Server.SshPort), params.Server.SshUser, params.Server.SshKey)
     defer serverConn.Close()
-
-    dstFile = strings.TrimRight(params.Server.WorkDir, "/") + "/" + params.PackageName
     //上传包
-    if err = serverConn.CopyFile(params.PackagePath, dstFile); err != nil {
-        result.ResStatus = model.TaskRunFail
-        result.Output = "错误原因: " + err.Error()
-        goto DepErr
-    }
-    //增量发布则尝试依赖上一次项目
-    dstDir = strings.TrimRight(params.Server.WorkDir, "/") + "/" + params.PackageUuid
-    if params.Task.DeployType == model.DeployTypeIncrease && params.Env.Uuid != "" {
-        _resDir := strings.TrimRight(params.Server.WorkDir, "/") + "/" + params.Env.Uuid
-        deployCmd = "([ ! -d " + _resDir + " ] || cp -r " + _resDir + " " + dstDir + ") && ([ ! -d " + dstDir + " ] || mkdir -p " + dstDir + ")"
-    } else {
-        deployCmd = "mkdir -p " + dstDir
-    }
-    deployCmd = deployCmd + " && tar -zx --no-same-owner -C " + dstDir + " -f " + dstFile + " && rm -f " + dstFile + " && cd " + dstDir
-    params.AfterScript = strings.Replace(params.AfterScript, "{web_root}", dstDir, -1)
-    params.AfterScript = strings.Replace(params.AfterScript, "{version}", params.Task.Version, -1)
-    if params.AfterScript != "" {
-        deployCmd = deployCmd + " && " + params.AfterScript
-    }
-    if output, err = serverConn.RunCmd(deployCmd); err != nil {
-        result.ResStatus = model.TaskRunFail
-        result.Output = "错误原因: " + err.Error() + "\nCommand: " + deployCmd
-        if output != "" {
-            result.Output = result.Output + "\nOutput: " + output
+    if err = serverConn.CopyFile(params.PackagePath, params.DstFilePath); err != nil {
+        params.ResChan <- &model.DeployTaskResult{
+            Params:    params,
+            ResStatus: model.TaskRunFail,
+            Output:    "上传包到目标机错误: " + err.Error(),
         }
-        goto DepErr
+        return
     }
-    result.ResStatus = model.TaskRunSuccess
-    result.Output = "Command: " + deployCmd
-    result.SwitchCmd = "ln -snf " + dstDir + " " + params.Project.WebRoot
-    params.ResChan <- &result
+    if output, err = serverConn.RunCmd(params.DeployCmd); err != nil {
+        _msg := "错误原因: " + err.Error() + "\nCommand: " + params.DeployCmd
+        if output != "" {
+            _msg += "\nOutput: " + output
+        }
+        params.ResChan <- &model.DeployTaskResult{
+            Params:    params,
+            ResStatus: model.TaskRunFail,
+            Output:    _msg,
+        }
+        return
+    }
+
+    params.ResChan <- &model.DeployTaskResult{
+        ResStatus: model.TaskRunSuccess,
+        Output:    "Command: " + params.DeployCmd,
+        SwitchCmd: "ln -snf " + params.DstPath + " " + params.Project.WebRoot,
+    }
     return
-DepErr:
-    params.ResChan <- &result
-    _, _ = serverConn.RunCmd("rm -f " + dstFile)
-    _, _ = serverConn.RunCmd("rm -rf " + dstDir)
+}
+
+//通过跳板机发布
+func deployStartByJumper(params model.DeployTaskRunParams, prepareTask *model.TaskPrepare) {
+    var (
+        serverConn *utils.ServerConn
+        output     string
+        wg         sync.WaitGroup
+        err        error
+    )
+    serverConn = utils.NewServerConn(params.Jumper.SshAddr+":"+strconv.Itoa(params.Jumper.SshPort), params.Jumper.SshUser, params.Jumper.SshKey)
+    defer serverConn.Close()
+
+    if err = serverConn.CopyFile(params.PackagePath, params.DstFilePath); err != nil {
+        for _, _srv := range prepareTask.Servers {
+            params.Server = _srv
+            params.ResChan <- &model.DeployTaskResult{
+                Params:    params,
+                ResStatus: model.TaskRunFail,
+                Output:    "上传包到跳板机错误: " + err.Error(),
+            }
+        }
+        return
+    }
+
+    wg.Add(len(prepareTask.Servers))
+    for _, _sv := range prepareTask.Servers {
+        params.Server = _sv
+        go func(p model.DeployTaskRunParams) {
+            if output, err = serverConn.RunCmd(deployCmd); err != nil {
+                result.ResStatus = model.TaskRunFail
+                result.Output = "错误原因: " + err.Error() + "\nCommand: " + deployCmd
+                if output != "" {
+                    result.Output = result.Output + "\nOutput: " + output
+                }
+                goto DepErr
+            }
+            result.ResStatus = model.TaskRunSuccess
+            result.Output = "Command: " + deployCmd
+            result.SwitchCmd = "ln -snf " + dstDir + " " + params.Project.WebRoot
+            params.ResChan <- &result
+
+            wg.Done()
+        }(params)
+    }
+    wg.Wait()
+
+    return
 }
 
 //监听发布任务结果
@@ -204,20 +223,60 @@ func deployProcessHandle(resChan chan *model.DeployTaskResult, prepareTask *mode
         if _status == model.TaskRunSuccess && v.ResStatus != model.TaskRunSuccess {
             _status = model.TaskRunFail
         }
-        messages[v.Server.SshAddr] = map[string]interface{}{
+        messages[v.Params.Server.SshAddr] = map[string]interface{}{
             "status":  v.ResStatus,
             "message": v.Output + "\n切换: " + v.SwitchCmd,
         }
     }
     updateRes["status"] = _status
-    if len(resMap) > 0 {
-        _uuid = resMap[0].Uuid
-        updateRes["uuid"] = _uuid
-    }
     updateRes["output"], _ = json.Marshal(messages)
-    switchSymbol(resMap)
+    if _status == model.TaskRunSuccess {
+        if len(resMap) > 0 {
+            _uuid = resMap[0].Params.PackageUuid
+            updateRes["uuid"] = _uuid
+        }
+        switchSymbol(resMap)
+        model.UpdateEnvRes(prepareTask.Env.EnvId, prepareTask.Task.Version, _uuid)
+    }
     model.UpdateTaskStatusAndOutput(prepareTask.Task.TaskId, updateRes)
-    model.UpdateEnvRes(prepareTask.Env.EnvId, prepareTask.Task.Version, _uuid)
+}
+
+//生成目标机脚本
+func getDeployCmd(params *model.DeployTaskRunParams, delFiles []string) {
+    var deployCmd string
+    if params.Task.DeployType == model.DeployTypeIncrease && params.Env.Uuid != "" {
+        _resDir := strings.TrimRight(params.Server.WorkDir, "/") + "/" + params.Env.Uuid
+        deployCmd = "([ ! -d " + _resDir + " ] || cp -r " + _resDir + " " + params.DstPath + ") && ([ ! -d " +
+            params.DstPath + " ] || mkdir -p " + params.DstPath + ")"
+    } else {
+        deployCmd = "mkdir -p " + params.DstPath
+    }
+    var dstFile = strings.TrimRight(params.Server.WorkDir, "/") + "/" + params.PackageName
+    deployCmd += " && tar -zx --no-same-owner -C " + params.DstPath + " -f " + dstFile + " && rm -f " +
+        dstFile + " && cd " + params.DstPath
+
+    //after command 切换软链前执行
+    if len(delFiles) > 0 {
+        deployCmd += " && rm -f " + strings.Join(delFiles, " ")
+    }
+    _aftScript := ""
+    if params.Project.AfterScript != "" {
+        _aftScript = params.Project.AfterScript
+    }
+    if params.Task.AfterScript != "" {
+        if _aftScript == "" {
+            _aftScript = params.Task.AfterScript
+        } else {
+            _aftScript += " && " + params.Task.AfterScript
+        }
+    }
+    _aftScript = strings.Replace(_aftScript, "{web_root}", params.DstPath, -1)
+    _aftScript = strings.Replace(_aftScript, "{version}", params.Task.Version, -1)
+    if _aftScript != "" {
+        deployCmd += " && " + _aftScript
+    }
+    params.DeployCmd = deployCmd
+    return
 }
 
 func switchSymbol(resMap []*model.DeployTaskResult) {
@@ -235,96 +294,3 @@ func switchSymbol(resMap []*model.DeployTaskResult) {
         serverConn.Close()
     }
 }
-
-/*
-   go func() {
-       var (
-           serverConn *utils.ServerConn
-           nameUuid   string
-           name       string   //包名 不带全路径
-           filename   string   //全路径包名
-           delFiles   []string //删除的文件
-           dstFile    string   //目标服务器目录
-           output     string
-           _dstDir    string //目标服务器目录
-           _dCmd      string //目标服务器拷贝文件夹command
-           _afterCmd  string
-       )
-       nameUuid = uuid.NewV4().String()
-       name = nameUuid + ".tar.gz"
-
-       //全量则上一次版本号不传
-       lastVer := env.LastVer
-       if task.DeployType == model.DeployTypeAll {
-           lastVer = ""
-       }
-       //打包
-       if filename, delFiles, err = utils.GetRepository(&project).Package(lastVer, task.Version, name); err != nil {
-           goto DepErr
-       }
-       //建立连接
-       serverConn = utils.NewServerConn(server.SshAddr+":"+strconv.Itoa(server.SshPort), server.SshUser, server.SshKey)
-       defer serverConn.Close()
-
-       dstFile = strings.TrimRight(server.WorkDir, "/") + "/" + name
-       //上传包
-       if err = serverConn.CopyFile(filename, dstFile); err != nil {
-           goto DepErr
-       }
-       //增量发布则尝试依赖上一次项目
-       _dstDir = strings.TrimRight(server.WorkDir, "/") + "/" + nameUuid
-       if task.DeployType == model.DeployTypeIncrease && env.Uuid != "" {
-           _resDir := strings.TrimRight(server.WorkDir, "/") + "/" + env.Uuid
-           _dCmd = "([ ! -d " + _resDir + " ] || cp -r " + _resDir + " " + _dstDir + ") && ([ ! -d " + _dstDir +
-               " ] || mkdir -p " + _dstDir + ")"
-           if len(delFiles) > 0 {
-               _dCmd = _dCmd + " && cd " + _dstDir + " && rm -f " + strings.Join(delFiles, " ")
-           }
-       } else {
-           _dCmd = "mkdir -p " + _dstDir
-       }
-       _dCmd = _dCmd + " && tar -zx --no-same-owner -C " + _dstDir + " -f " + dstFile + " && rm -f " + dstFile + " && cd " + _dstDir
-       //after command 切换软链前执行
-       if project.AfterScript != "" {
-           _afterCmd = project.AfterScript
-       }
-       if task.AfterScript != "" {
-           if _afterCmd == "" {
-               _afterCmd = strings.Replace(task.AfterScript, "{web_root}", _dstDir, -1)
-           } else {
-               _afterCmd = _afterCmd + " && " + task.AfterScript
-           }
-       }
-       _afterCmd = strings.Replace(_afterCmd, "{web_root}", _dstDir, -1)
-       _afterCmd = strings.Replace(_afterCmd, "{version}", task.Version, -1)
-       if _afterCmd != "" {
-           _dCmd = _dCmd + " && " + _afterCmd
-       }
-       _dCmd = _dCmd + " && ln -snf " + _dstDir + " " + project.WebRoot
-       fmt.Println(_dCmd)
-       if output, err = serverConn.RunCmd(_dCmd); err != nil {
-           goto DepErr
-       }
-       global.GDB.Model(&env).Updates(map[string]interface{}{
-           "last_ver": task.Version,
-           "uuid":     nameUuid,
-       })
-       global.GDB.Model(&task).Updates(map[string]interface{}{
-           "uuid":   nameUuid,
-           "status": model.TaskRunSuccess,
-       })
-       utils.DeleteFile(filename)
-       return
-   DepErr:
-       global.GDB.Model(&task).Updates(map[string]interface{}{
-           "err_output": err.Error(),
-           "status":     model.ProjectInitFail,
-       })
-       fmt.Println(output)
-       utils.DeleteFile(filename)
-       if serverConn != nil {
-           _, _ = serverConn.RunCmd("rm -f " + dstFile)
-           _, _ = serverConn.RunCmd("rm -rf " + _dstDir)
-       }
-   }()
-*/
