@@ -196,7 +196,8 @@ func GetDeployTaskList(search *request.ComPageInfo) (taskList []DeployTask, tota
     if err = db.Model(&taskList).Count(&total).Error; err != nil {
         return
     }
-    if err = db.Limit(search.PageSize).Offset(search.PageSize * (search.CurrentPage - 1)).Find(&taskList).Error; err != nil {
+    if err = db.Order("task_id desc").Limit(search.PageSize).Offset(search.PageSize * (search.CurrentPage - 1)).
+        Find(&taskList).Error; err != nil {
         return
     }
     for idx, tl := range taskList {
