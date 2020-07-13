@@ -12,10 +12,10 @@ import (
 )
 
 type ServerConn struct {
-    addr       string // 192.168.1.1:22
+    addr       string
     user       string
     privateKey string
-    conn       *ssh.Client
+    sshClient  *ssh.Client
     sftpClient *sftp.Client
 }
 
@@ -28,117 +28,136 @@ func NewServerConn(addr, user, privateKey string) *ServerConn {
 }
 
 // 连接ssh服务器
-func (s *ServerConn) getSshConnect() (*ssh.Client, error) {
-    if s.conn != nil {
-        return s.conn, nil
+func (s *ServerConn) getSshConnect() (sshClient *ssh.Client, err error) {
+    var (
+        keys   []ssh.Signer
+        config ssh.ClientConfig
+        signer ssh.Signer
+    )
+    if s.sshClient != nil {
+        sshClient = s.sshClient
+        return
     }
-    config := ssh.ClientConfig{
+    config = ssh.ClientConfig{
         User: s.user,
         HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
             return nil
         },
     }
-    var keys []ssh.Signer
-    if signer, err := ssh.ParsePrivateKey([]byte(s.privateKey)); err == nil {
-        keys = append(keys, signer)
+    if signer, err = ssh.ParsePrivateKey([]byte(s.privateKey)); err != nil {
+        err = fmt.Errorf("连接服务器失败[%s] : %v", s.addr, err.Error())
+        return
     }
+    keys = append(keys, signer)
     config.Auth = append(config.Auth, ssh.PublicKeys(keys...))
-    conn, err := ssh.Dial("tcp", s.addr, &config)
-    if err != nil {
-        return nil, fmt.Errorf("无法连接到服务器 [%s]: %v", s.addr, err)
+    if s.sshClient, err = ssh.Dial("tcp", s.addr, &config); err != nil {
+        err = fmt.Errorf("无法连接到服务器[%s] : %v", s.addr, err.Error())
+        return
     }
-    s.conn = conn
-    return s.conn, nil
+    sshClient = s.sshClient
+    return
 }
 
 // 返回sftp连接
-func (s *ServerConn) getSftpConnect() (*sftp.Client, error) {
+func (s *ServerConn) getSftpConnect() (sftpClient *sftp.Client, err error) {
+    var sshClient *ssh.Client
     if s.sftpClient != nil {
-        return s.sftpClient, nil
+        sftpClient = s.sftpClient
+        return
     }
-
-    conn, err := s.getSshConnect()
-    if err != nil {
-        return nil, err
+    if sshClient, err = s.getSshConnect(); err != nil {
+        return
     }
-
-    s.sftpClient, err = sftp.NewClient(conn, sftp.MaxPacket(1<<15))
-    return s.sftpClient, err
+    s.sftpClient, err = sftp.NewClient(sshClient, sftp.MaxPacket(1<<15))
+    sftpClient = s.sftpClient
+    return
 }
 
 // 关闭连接
 func (s *ServerConn) Close() {
-    if s.conn != nil {
-        s.conn.Close()
-        s.conn = nil
+    if s.sshClient != nil {
+        _ = s.sshClient.Close()
+        s.sshClient = nil
     }
     if s.sftpClient != nil {
-        s.sftpClient.Close()
+        _ = s.sftpClient.Close()
         s.sftpClient = nil
     }
 }
 
 // 尝试连接服务器
-func (s *ServerConn) TryConnect() error {
-    _, err := s.getSshConnect()
-    if err != nil {
-        return err
+func (s *ServerConn) TryConnect() (err error) {
+    if _, err = s.getSshConnect(); err != nil {
+        return
     }
     s.Close()
-    return nil
+    return
 }
 
 // 在远程服务器执行命令
-func (s *ServerConn) RunCmd(cmd string) (string, error) {
-    conn, err := s.getSshConnect()
-    if err != nil {
-        return "", err
+func (s *ServerConn) RunCmd(cmd string) (output string, err error) {
+    var (
+        sshClient *ssh.Client
+        session   *ssh.Session
+    )
+    if sshClient, err = s.getSshConnect(); err != nil {
+        return
     }
-    session, err := conn.NewSession()
-    if err != nil {
-        return "", fmt.Errorf("创建会话失败: %v", err)
+    if session, err = sshClient.NewSession(); err != nil {
+        return
     }
     defer session.Close()
     var buf bytes.Buffer
     session.Stdout = &buf
     session.Stdin = &buf
-    if err := session.Run(cmd); err != nil {
-        return "", fmt.Errorf("执行命令失败: %v", err)
+    if err = session.Run(cmd); err != nil {
+        err = fmt.Errorf("执行命令失败: %v", err.Error())
+        return
     }
-    return buf.String(), nil
+    output = buf.String()
+    return
 }
 
 // 拷贝本机文件到远程服务器
-func (s *ServerConn) CopyFile(srcFile, dstFile string) error {
-    client, err := s.getSftpConnect()
-    if err != nil {
-        return err
+func (s *ServerConn) CopyFile(srcFile, dstFile string) (err error) {
+    var (
+        client    *sftp.Client
+        dstPath   string
+        f         *os.File
+        w         *sftp.File
+        writeSize int64
+        fileInfo  os.FileInfo
+    )
+    if client, err = s.getSftpConnect(); err != nil {
+        return
     }
-    toPath := path.Dir(dstFile)
-    if _, err := s.RunCmd("mkdir -p " + toPath); err != nil {
-        return fmt.Errorf("创建目录失败：%v", err)
+    dstPath = path.Dir(dstFile)
+    if _, err := s.RunCmd("mkdir -p " + dstPath); err != nil {
+        err = fmt.Errorf("创建目录失败：%v", err)
+        return
     }
 
-    f, err := os.Open(srcFile)
-    if err != nil {
-        return fmt.Errorf("打开本地文件失败: %v", err)
+    if f, err = os.Open(srcFile); err != nil {
+        err = fmt.Errorf("打开本地文件失败: %v", err)
+        return
     }
     defer f.Close()
 
-    w, err := client.Create(dstFile)
-    if err != nil {
-        return fmt.Errorf("创建文件失败 [%s]: %v", dstFile, err)
+    if w, err = client.Create(dstFile); err != nil {
+        err = fmt.Errorf("创建文件失败 [%s]: %v", dstFile, err)
+        return
     }
     defer w.Close()
 
-    n, err := io.Copy(w, f)
-    if err != nil {
-        return fmt.Errorf("拷贝文件失败: %v", err)
+    if writeSize, err = io.Copy(w, f); err != nil {
+        err = fmt.Errorf("拷贝文件失败: %v", err)
+        return
     }
 
-    fstat, _ := f.Stat()
-    if fstat.Size() != n {
-        return fmt.Errorf("写入文件大小错误，源文件大小：%d, 写入大小：%d", fstat.Size(), n)
+    fileInfo, _ = f.Stat()
+    if fileInfo.Size() != writeSize {
+        err = fmt.Errorf("写入文件大小错误，源文件大小：%d, 写入大小：%d", fileInfo.Size(), writeSize)
+        return
     }
-    return nil
+    return
 }
