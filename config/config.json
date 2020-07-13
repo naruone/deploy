@@ -1,5 +1,5 @@
 {
-    "env": "production",
+    "env": "debug",
     "port": 8085,
     "db": {
         "host": "122.51.244.208",
