@@ -182,18 +182,18 @@ func deployStartByJumper(params model.DeployTaskRunParams, prepareTask *model.Ta
     for _, _sv := range prepareTask.Servers {
         params.Server = _sv
         go func(p model.DeployTaskRunParams) {
-            if output, err = serverConn.RunCmd(deployCmd); err != nil {
-                result.ResStatus = model.TaskRunFail
-                result.Output = "错误原因: " + err.Error() + "\nCommand: " + deployCmd
-                if output != "" {
-                    result.Output = result.Output + "\nOutput: " + output
-                }
-                goto DepErr
-            }
-            result.ResStatus = model.TaskRunSuccess
-            result.Output = "Command: " + deployCmd
-            result.SwitchCmd = "ln -snf " + dstDir + " " + params.Project.WebRoot
-            params.ResChan <- &result
+            //if output, err = serverConn.RunCmd(p.DeployCmd); err != nil {
+            //    result.ResStatus = model.TaskRunFail
+            //    result.Output = "错误原因: " + err.Error() + "\nCommand: " + deployCmd
+            //    if output != "" {
+            //        result.Output = result.Output + "\nOutput: " + output
+            //    }
+            //    goto DepErr
+            //}
+            //result.ResStatus = model.TaskRunSuccess
+            //result.Output = "Command: " + deployCmd
+            //result.SwitchCmd = "ln -snf " + dstDir + " " + params.Project.WebRoot
+            //params.ResChan <- &result
 
             wg.Done()
         }(params)
@@ -283,13 +283,14 @@ func switchSymbol(resMap []*model.DeployTaskResult) {
     var (
         serverConn *utils.ServerConn
     )
-    if resMap[0].Jumper.ServerId != 0 { //跳板机操作
+    if resMap[0].Params.Jumper.ServerId != 0 { //跳板机操作
         // todo 跳板机切换
         // 1. 连接跳板机.  2. [并发]执行目标机远程命令
         return
     }
     for _, r := range resMap {
-        serverConn = utils.NewServerConn(r.Server.SshAddr+":"+strconv.Itoa(r.Server.SshPort), r.Server.SshUser, r.Server.SshKey)
+        serverConn = utils.NewServerConn(r.Params.Server.SshAddr+":"+strconv.Itoa(r.Params.Server.SshPort),
+            r.Params.Server.SshUser, r.Params.Server.SshKey)
         _, _ = serverConn.RunCmd(r.SwitchCmd)
         serverConn.Close()
     }
