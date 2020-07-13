@@ -182,7 +182,7 @@ func deployStartByJumper(params model.DeployTaskRunParams, prepareTask *model.Ta
     for _, _sv := range prepareTask.Servers {
         params.Server = _sv
         go func(p model.DeployTaskRunParams) {
-            // ssh -i ~/.ssh/id_rsa root@ip -
+            // ssh -Tq -p 22 -i ~/.ssh/id_rsa root@ip 'shell'
 
             //if output, err = serverConn.RunCmd(p.DeployCmd); err != nil {
             //    result.ResStatus = model.TaskRunFail
@@ -248,8 +248,7 @@ func getDeployCmd(params *model.DeployTaskRunParams, delFiles []string) {
     var deployCmd string
     if params.Task.DeployType == model.DeployTypeIncrease && params.Env.Uuid != "" {
         _resDir := strings.TrimRight(config.GConfig.ServerWorkDir, "/") + "/" + params.Env.Uuid
-        deployCmd = "([ ! -d " + _resDir + " ] || cp -r " + _resDir + " " + params.DstPath + ") && ([ ! -d " +
-            params.DstPath + " ] || mkdir -p " + params.DstPath + ")"
+        deployCmd = "([ ! -d " + _resDir + " ] || cp -r " + _resDir + " " + params.DstPath + ") && ([ -d " + params.DstPath + " ] || mkdir -p " + params.DstPath + ")"
     } else {
         deployCmd = "mkdir -p " + params.DstPath
     }

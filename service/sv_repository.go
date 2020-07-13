@@ -117,7 +117,7 @@ func (repo *Repository) Package(startVer, endVer, name string) (filename string,
         _delFile, _, err = utils.RunCmd(repo.Path, "/bin/bash", "-c", "git diff --name-status -b "+startVer+
             " "+endVer+"|grep ^D |awk '{print $2}'")
         var _dFiles []string
-        for _, v := range strings.Split(_delFile, "\n") {
+        for _, v := range strings.Split(strings.TrimSpace(_delFile), "\n") {
             _dFiles = append(_dFiles, strings.TrimSpace(v))
         }
         delFiles = _dFiles

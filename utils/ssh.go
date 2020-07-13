@@ -132,7 +132,7 @@ func (s *ServerConn) CopyFile(srcFile, dstFile string) (err error) {
         return
     }
     dstPath = path.Dir(dstFile)
-    if _, err := s.RunCmd("mkdir -p " + dstPath); err != nil {
+    if _, err = s.RunCmd("mkdir -p " + dstPath); err != nil {
         err = fmt.Errorf("创建目录失败：%v", err)
         return
     }
