@@ -88,6 +88,7 @@ type DeployTaskResult struct {
     Output      string //错误输出
     PackagePath string //包全路径地址
     SwitchCmd   string //切换软链接||php reload
+    Uuid        string //当前版本文件夹uuid
 }
 
 func DeleteEnvAndTask(projectId int) (err error) {
@@ -157,6 +158,13 @@ func SaveEnvCfg(env *EnvProServer) (err error) {
         }
     }
     return
+}
+
+func UpdateEnvRes(envId int, lastVer string, Uuid string) {
+    mdb.Model(&EnvProServer{}).Where("env_id = ?", envId).Updates(map[string]interface{}{
+        "last_ver": lastVer,
+        "uuid":     Uuid,
+    })
 }
 
 func DelEnvCfg(cfgId int) (err error) {

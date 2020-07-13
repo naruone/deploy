@@ -139,6 +139,7 @@ func deployStart(params model.DeployTaskRunParams) {
         Server:      params.Server,
         Jumper:      params.Jumper,
         PackagePath: params.PackagePath,
+        Uuid:        params.PackageUuid,
     }
     serverConn = utils.NewServerConn(params.Server.SshAddr+":"+strconv.Itoa(params.Server.SshPort), params.Server.SshUser, params.Server.SshKey)
     defer serverConn.Close()
@@ -191,6 +192,7 @@ func deployProcessHandle(resChan chan *model.DeployTaskResult, prepareTask *mode
         updateRes   = make(map[string]interface{})
         messages    = make(map[string]interface{})
         _status     = model.TaskRunSuccess
+        _uuid       string
     )
     for i := 0; i < len(prepareTask.Servers); i++ {
         select {
@@ -208,9 +210,14 @@ func deployProcessHandle(resChan chan *model.DeployTaskResult, prepareTask *mode
         }
     }
     updateRes["status"] = _status
+    if len(resMap) > 0 {
+        _uuid = resMap[0].Uuid
+        updateRes["uuid"] = _uuid
+    }
     updateRes["output"], _ = json.Marshal(messages)
     switchSymbol(resMap)
     model.UpdateTaskStatusAndOutput(prepareTask.Task.TaskId, updateRes)
+    model.UpdateEnvRes(prepareTask.Env.EnvId, prepareTask.Task.Version, _uuid)
 }
 
 func switchSymbol(resMap []*model.DeployTaskResult) {
