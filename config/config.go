@@ -22,6 +22,7 @@ type SysConfig struct {
     Captcha       *Captcha  `json:"captcha"`
     Repo          string    `json:"repo"`
     RepoPackage   string    `json:"repo_package"`
+    ServerWorkDir string    `json:"srv_work_dir"`
 }
 
 type DbConfig struct {

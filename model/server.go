@@ -14,7 +14,6 @@ type Server struct {
     SshPort  int       `json:"ssh_port"`
     SshUser  string    `json:"ssh_user"`
     SshKey   string    `json:"-"`
-    WorkDir  string    `json:"work_dir"`
     CreateAt time.Time `json:"create_at"`
     UpdateAt time.Time `json:"update_at"`
 }
@@ -58,7 +57,6 @@ func SaveServer(p *Server) (err error) {
             "ssh_addr":  p.SshAddr,
             "ssh_port":  p.SshPort,
             "ssh_user":  p.SshUser,
-            "work_dir":  p.WorkDir,
             "update_at": time.Now(),
         }
         if p.SshKey != "" {

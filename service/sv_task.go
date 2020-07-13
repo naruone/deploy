@@ -1,6 +1,7 @@
 package service
 
 import (
+    "deploy/config"
     "deploy/model"
     "deploy/model/request"
     "deploy/utils"
@@ -79,9 +80,8 @@ func deployScheduleStart(prepareTask *model.TaskPrepare) {
         PackageUuid: uuid.NewV4().String(),
     }
     params.PackageName = params.PackageUuid + ".tar.gz"
-    params.DstPath = strings.TrimRight(params.Server.WorkDir, "/") + "/" + params.PackageUuid
-    params.DstFilePath = strings.TrimRight(params.Server.WorkDir, "/") + "/" + params.PackageName
-
+    params.DstPath = strings.TrimRight(config.GConfig.ServerWorkDir, "/") + "/" + params.PackageUuid
+    params.DstFilePath = strings.TrimRight(config.GConfig.ServerWorkDir, "/") + "/" + params.PackageName
     //全量则上一次版本号不传
     _lastVer := prepareTask.Env.LastVer
     if prepareTask.Task.DeployType == model.DeployTypeAll {
@@ -134,6 +134,7 @@ func deployStartDirect(params model.DeployTaskRunParams) {
         }
         return
     }
+
     if output, err = serverConn.RunCmd(params.DeployCmd); err != nil {
         _msg := "错误原因: " + err.Error() + "\nCommand: " + params.DeployCmd
         if output != "" {
@@ -148,6 +149,7 @@ func deployStartDirect(params model.DeployTaskRunParams) {
     }
 
     params.ResChan <- &model.DeployTaskResult{
+        Params:    params,
         ResStatus: model.TaskRunSuccess,
         Output:    "Command: " + params.DeployCmd,
         SwitchCmd: "ln -snf " + params.DstPath + " " + params.Project.WebRoot,
@@ -159,7 +161,6 @@ func deployStartDirect(params model.DeployTaskRunParams) {
 func deployStartByJumper(params model.DeployTaskRunParams, prepareTask *model.TaskPrepare) {
     var (
         serverConn *utils.ServerConn
-        output     string
         wg         sync.WaitGroup
         err        error
     )
@@ -177,11 +178,12 @@ func deployStartByJumper(params model.DeployTaskRunParams, prepareTask *model.Ta
         }
         return
     }
-
     wg.Add(len(prepareTask.Servers))
     for _, _sv := range prepareTask.Servers {
         params.Server = _sv
         go func(p model.DeployTaskRunParams) {
+            // ssh -i ~/.ssh/id_rsa root@ip -
+
             //if output, err = serverConn.RunCmd(p.DeployCmd); err != nil {
             //    result.ResStatus = model.TaskRunFail
             //    result.Output = "错误原因: " + err.Error() + "\nCommand: " + deployCmd
@@ -245,15 +247,14 @@ func deployProcessHandle(resChan chan *model.DeployTaskResult, prepareTask *mode
 func getDeployCmd(params *model.DeployTaskRunParams, delFiles []string) {
     var deployCmd string
     if params.Task.DeployType == model.DeployTypeIncrease && params.Env.Uuid != "" {
-        _resDir := strings.TrimRight(params.Server.WorkDir, "/") + "/" + params.Env.Uuid
+        _resDir := strings.TrimRight(config.GConfig.ServerWorkDir, "/") + "/" + params.Env.Uuid
         deployCmd = "([ ! -d " + _resDir + " ] || cp -r " + _resDir + " " + params.DstPath + ") && ([ ! -d " +
             params.DstPath + " ] || mkdir -p " + params.DstPath + ")"
     } else {
         deployCmd = "mkdir -p " + params.DstPath
     }
-    var dstFile = strings.TrimRight(params.Server.WorkDir, "/") + "/" + params.PackageName
-    deployCmd += " && tar -zx --no-same-owner -C " + params.DstPath + " -f " + dstFile + " && rm -f " +
-        dstFile + " && cd " + params.DstPath
+    deployCmd += " && tar -zx --no-same-owner -C " + params.DstPath + " -f " + params.DstFilePath + " && rm -f " +
+        params.DstFilePath + " && cd " + params.DstPath
 
     //after command 切换软链前执行
     if len(delFiles) > 0 {

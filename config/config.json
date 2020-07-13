@@ -19,5 +19,6 @@
         "height": 35
     },
     "repo": "/tmp/_repo",
-    "repo_package": "/tmp/_repo/_package"
+    "repo_package": "/tmp/_repo/_package",
+    "srv_work_dir": "/opt/_repo"
 }

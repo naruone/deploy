@@ -31,22 +31,20 @@
                 width="50">
             </el-table-column>
             <el-table-column
-                prop="project_name"
-                label="项目名称"
-                width="120">
-            </el-table-column>
-            <el-table-column
-                prop="repo_url"
-                width="200"
-                label="仓库地址">
+                label="项目信息">
+                <template slot-scope="scope">
+                    <el-tooltip effect="dark" placement="top" :content="scope.row.repo_url">
+                        <span style="cursor: default">{{scope.row.project_name}}</span>
+                    </el-tooltip>
+                </template>
             </el-table-column>
             <el-table-column
                 prop="dst"
-                width="90"
+                width="150"
                 label="初始化目录">
             </el-table-column>
             <el-table-column
-                width="200"
+                width="250"
                 prop="web_root"
                 label="Web目录">
             </el-table-column>
@@ -71,7 +69,7 @@
                 prop="create_at"
                 label="创建时间">
             </el-table-column>
-            <el-table-column align="center" label="操作">
+            <el-table-column align="center" label="操作" width="200">
                 <template slot-scope="scope">
                     <el-button type="primary" icon="el-icon-edit" circle
                                @click="editProject(scope.row)"

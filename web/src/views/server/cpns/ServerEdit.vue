@@ -27,9 +27,6 @@
                     <el-input :autosize="{maxRows:10,minRows:4}" type="textarea" v-model="serverForm.ssh_key"
                               autocomplete="off"></el-input>
                 </el-form-item>
-                <el-form-item label="工作目录" prop="work_dir">
-                    <el-input v-model="serverForm.work_dir" autocomplete="off"></el-input>
-                </el-form-item>
                 <el-form-item>
                     <el-button @click="handleClose">取 消</el-button>
                     <el-button type="primary" @click="serverSave">确 定</el-button>
@@ -61,7 +58,6 @@
                     ssh_port: 22,
                     ssh_user: '',
                     ssh_key: '',
-                    work_dir: '/opt/_repo'
                 },
                 serverRules: {
                     type: [
@@ -81,9 +77,6 @@
                     ssh_key: [
                         {max: 5000, message: '长度小于5000个字符', trigger: 'blur'}
                     ],
-                    work_dir: [
-                        {required: true, message: '工作目录必填', trigger: 'blur'},
-                    ]
                 }
             }
         },
@@ -111,7 +104,6 @@
                 if (Object.keys(row).length === 0) {
                     this.serverForm.type = 1
                     this.serverForm.ssh_port = 22
-                    this.serverForm.work_dir = '/opt/_repo'
                 }
                 this.showDialog = true
             },

@@ -22,39 +22,34 @@
             <el-button @click="editServer({})"><i class="el-icon-plus"></i> 新增项目</el-button>
         </div>
         <el-table
-                :data="tableData"
-                border
-                style="width: 100%">
+            :data="tableData"
+            border
+            style="width: 100%">
             <el-table-column
-                    prop="server_id"
-                    label="ID"
-                    width="50">
+                prop="server_id"
+                label="ID"
+                width="100">
             </el-table-column>
             <el-table-column
-                    label="服务器类型"
-                    :formatter="serverType"
-                    width="120">
+                label="服务器类型"
+                width="200"
+                :formatter="serverType">
             </el-table-column>
             <el-table-column
-                    prop="ssh_addr"
-                    width="240"
-                    label="服务器地址">
+                prop="ssh_addr"
+                label="服务器地址">
             </el-table-column>
             <el-table-column
-                    prop="ssh_port"
-                    label="服务器端口">
+                prop="ssh_port"
+                width="120"
+                label="服务器端口">
             </el-table-column>
             <el-table-column
-                    width="200"
-                    prop="work_dir"
-                    label="工作目录">
+                width="200"
+                prop="create_at"
+                label="创建时间">
             </el-table-column>
-            <el-table-column
-                    width="200"
-                    prop="create_at"
-                    label="创建时间">
-            </el-table-column>
-            <el-table-column align="center" label="操作">
+            <el-table-column align="center" label="操作" width="200">
                 <template slot-scope="scope">
                     <el-button type="primary" icon="el-icon-edit" circle
                                @click="editServer(scope.row)"
@@ -67,13 +62,13 @@
         </el-table>
         <div class="page-content">
             <el-pagination
-                    @size-change="handleSizeChange"
-                    @current-change="handleCurrentChange"
-                    :current-page="currentPage"
-                    :page-sizes="[10, 20, 50, 100]"
-                    :page-size="pageSize"
-                    layout="total, sizes, prev, pager, next, jumper"
-                    :total="total">
+                @size-change="handleSizeChange"
+                @current-change="handleCurrentChange"
+                :current-page="currentPage"
+                :page-sizes="[10, 20, 50, 100]"
+                :page-size="pageSize"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="total">
             </el-pagination>
         </div>
         <ServerEdit :s-type="sType" ref="serverEditFromDrawer"></ServerEdit>

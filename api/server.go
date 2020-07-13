@@ -50,7 +50,6 @@ func SaveServer(c *gin.Context) {
         "SshPort": {utils.NotEmpty(), utils.Ge("1"), utils.Le("65535")},
         "SshUser": {utils.NotEmpty(), utils.Ge("3"), utils.Le("200")},
         "SshKey":  {utils.Le("5000")},
-        "WorkDir": {utils.NotEmpty(), utils.Ge("3"), utils.Le("200")},
     }
     if err = utils.Verify(server, serverVerify); err != nil {
         utils.FailWithMessage(err.Error(), c)
