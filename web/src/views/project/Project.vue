@@ -37,11 +37,12 @@
             </el-table-column>
             <el-table-column
                 prop="repo_url"
-                width="240"
+                width="200"
                 label="仓库地址">
             </el-table-column>
             <el-table-column
                 prop="dst"
+                width="90"
                 label="初始化目录">
             </el-table-column>
             <el-table-column
