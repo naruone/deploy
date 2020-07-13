@@ -40,14 +40,6 @@ func OkDetailed(data interface{}, message string, c *gin.Context) {
     Result(SUCCESS, data, message, c)
 }
 
-func Fail(c *gin.Context) {
-    Result(ERROR, map[string]interface{}{}, "操作失败", c)
-}
-
 func FailWithMessage(message string, c *gin.Context) {
     Result(ERROR, map[string]interface{}{}, message, c)
-}
-
-func FailWithDetailed(code int, data interface{}, message string, c *gin.Context) {
-    Result(code, data, message, c)
 }

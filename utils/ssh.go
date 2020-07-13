@@ -38,7 +38,7 @@ func (s *ServerConn) getSshConnect() (*ssh.Client, error) {
             return nil
         },
     }
-    keys := []ssh.Signer{}
+    var keys []ssh.Signer
     if signer, err := ssh.ParsePrivateKey([]byte(s.privateKey)); err == nil {
         keys = append(keys, signer)
     }
@@ -99,18 +99,13 @@ func (s *ServerConn) RunCmd(cmd string) (string, error) {
         return "", fmt.Errorf("创建会话失败: %v", err)
     }
     defer session.Close()
-
     var buf bytes.Buffer
-
     session.Stdout = &buf
     session.Stdin = &buf
-
     if err := session.Run(cmd); err != nil {
         return "", fmt.Errorf("执行命令失败: %v", err)
     }
-
     return buf.String(), nil
-
 }
 
 // 拷贝本机文件到远程服务器
