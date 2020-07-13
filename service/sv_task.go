@@ -71,6 +71,7 @@ func deployScheduleStart(prepareTask *model.TaskPrepare) {
         "status": model.TaskStarting,
     })
     params = model.DeployTaskRunParams{
+        Jumper:      prepareTask.Jumper,
         Task:        prepareTask.Task,
         Env:         prepareTask.Env,
         Project:     prepareTask.Project,
@@ -136,6 +137,7 @@ func deployStart(params model.DeployTaskRunParams) {
     )
     result = model.DeployTaskResult{
         Server:      params.Server,
+        Jumper:      params.Jumper,
         PackagePath: params.PackagePath,
     }
     serverConn = utils.NewServerConn(params.Server.SshAddr+":"+strconv.Itoa(params.Server.SshPort), params.Server.SshUser, params.Server.SshKey)
@@ -162,7 +164,6 @@ func deployStart(params model.DeployTaskRunParams) {
     if params.AfterScript != "" {
         deployCmd = deployCmd + " && " + params.AfterScript
     }
-    deployCmd = deployCmd + " && ln -snf " + dstDir + " " + params.Project.WebRoot //todo 切换软连后期改为结果里统一执行
     if output, err = serverConn.RunCmd(deployCmd); err != nil {
         result.ResStatus = model.TaskRunFail
         result.Output = "错误原因: " + err.Error() + "\nCommand: " + deployCmd
@@ -173,6 +174,7 @@ func deployStart(params model.DeployTaskRunParams) {
     }
     result.ResStatus = model.TaskRunSuccess
     result.Output = "Command: " + deployCmd
+    result.SwitchCmd = "ln -snf " + dstDir + " " + params.Project.WebRoot
     params.ResChan <- &result
     return
 DepErr:
@@ -202,14 +204,29 @@ func deployProcessHandle(resChan chan *model.DeployTaskResult, prepareTask *mode
         }
         messages[v.Server.SshAddr] = map[string]interface{}{
             "status":  v.ResStatus,
-            "message": v.Output,
+            "message": v.Output + "\n切换: " + v.SwitchCmd,
         }
     }
     updateRes["status"] = _status
     updateRes["output"], _ = json.Marshal(messages)
-
-    //todo 可以将切换软连接放在这里
+    switchSymbol(resMap)
     model.UpdateTaskStatusAndOutput(prepareTask.Task.TaskId, updateRes)
+}
+
+func switchSymbol(resMap []*model.DeployTaskResult) {
+    var (
+        serverConn *utils.ServerConn
+    )
+    if resMap[0].Jumper.ServerId != 0 { //跳板机操作
+        // todo 跳板机切换
+        // 1. 连接跳板机.  2. [并发]执行目标机远程命令
+        return
+    }
+    for _, r := range resMap {
+        serverConn = utils.NewServerConn(r.Server.SshAddr+":"+strconv.Itoa(r.Server.SshPort), r.Server.SshUser, r.Server.SshKey)
+        _, _ = serverConn.RunCmd(r.SwitchCmd)
+        serverConn.Close()
+    }
 }
 
 /*

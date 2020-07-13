@@ -69,6 +69,7 @@ type TaskPrepare struct {
 //任务调度参数结构
 type DeployTaskRunParams struct {
     Server      Server //当前发布目标机
+    Jumper      Server
     Task        DeployTask
     Env         EnvProServer
     Project     Project
@@ -82,9 +83,11 @@ type DeployTaskRunParams struct {
 //任务结果
 type DeployTaskResult struct {
     Server      Server //结果对应的服务器
+    Jumper      Server
     ResStatus   int    //结果状态
     Output      string //错误输出
     PackagePath string //包全路径地址
+    SwitchCmd   string //切换软链接||php reload
 }
 
 func DeleteEnvAndTask(projectId int) (err error) {
