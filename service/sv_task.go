@@ -7,8 +7,8 @@ import (
     "deploy/utils"
     "encoding/json"
     "errors"
-    "fmt"
     uuid "github.com/satori/go.uuid"
+    "path"
     "strconv"
     "strings"
     "sync"
@@ -162,7 +162,7 @@ func deployStartDirect(params model.DeployTaskRunParams) {
 func deployStartByJumper(params model.DeployTaskRunParams, prepareTask *model.TaskPrepare) {
     var (
         serverConn *utils.ServerConn
-        wg         sync.WaitGroup
+        wg         sync.WaitGroup //可以不使用, 不想改了
         err        error
     )
     serverConn = utils.NewServerConn(params.Jumper.SshAddr+":"+strconv.Itoa(params.Jumper.SshPort), params.Jumper.SshUser, params.Jumper.SshKeyPath)
@@ -182,27 +182,78 @@ func deployStartByJumper(params model.DeployTaskRunParams, prepareTask *model.Ta
     wg.Add(len(prepareTask.Servers))
     for _, _sv := range prepareTask.Servers {
         params.Server = _sv
-        go func(p model.DeployTaskRunParams) {
-            // ssh -Tq -p 22 -i ~/.ssh/id_rsa root@ip 'shell'
+        go func(p model.DeployTaskRunParams, svrConn *utils.ServerConn) {
+            var (
+                commandLog string
+                output     string
+                _cmd       string
+                err        error
+            )
 
-            //if output, err = serverConn.RunCmd(p.DeployCmd); err != nil {
-            //    result.ResStatus = model.TaskRunFail
-            //    result.Output = "错误原因: " + err.Error() + "\nCommand: " + deployCmd
-            //    if output != "" {
-            //        result.Output = result.Output + "\nOutput: " + output
-            //    }
-            //    goto DepErr
-            //}
-            //result.ResStatus = model.TaskRunSuccess
-            //result.Output = "Command: " + deployCmd
-            //result.SwitchCmd = "ln -snf " + dstDir + " " + params.Project.WebRoot
-            //params.ResChan <- &result
+            //检测目标机工作目录
+            _cmd = remoteGenCmd(p.Server, "([ ! -d "+path.Dir(p.DstFilePath)+" ] && mkdir -p "+path.Dir(p.DstFilePath)+")")
+            commandLog = "检测Dir: " + _cmd
+            if output, err = svrConn.RunCmd(_cmd); err != nil {
+                _msg := "错误原因 : " + err.Error() + "\nCommand: " + commandLog
+                if output != "" {
+                    _msg += "\nOutput: " + output
+                }
+                params.ResChan <- &model.DeployTaskResult{
+                    Params:    p,
+                    ResStatus: model.TaskRunFail,
+                    Output:    _msg,
+                }
+                wg.Done()
+                return
+            }
 
+            //上传包到目标机
+            _cmd = "scp -i " + p.Server.SshKeyPath + " " + p.PackagePath + " " + p.Server.SshUser + "@" + p.Server.SshAddr + ":" + p.DstFilePath
+            commandLog += "\n上传包: " + _cmd
+            if output, err = svrConn.RunCmd(_cmd); err != nil {
+                _msg := "上传包到目标机错误 : " + err.Error() + "\nCommand: " + commandLog
+                if output != "" {
+                    _msg += "\nOutput: " + output
+                }
+                params.ResChan <- &model.DeployTaskResult{
+                    Params:    p,
+                    ResStatus: model.TaskRunFail,
+                    Output:    _msg,
+                }
+                wg.Done()
+                return
+            }
+
+            //执行发布
+            _cmd = remoteGenCmd(p.Server, p.DeployCmd)
+            commandLog += "\n代码发布: " + _cmd
+            if output, err = svrConn.RunCmd(_cmd); err != nil {
+                _msg := "发布失败 : " + err.Error() + "\nCommand: " + commandLog
+                if output != "" {
+                    _msg += "\nOutput: " + output
+                }
+                params.ResChan <- &model.DeployTaskResult{
+                    Params:    p,
+                    ResStatus: model.TaskRunFail,
+                    Output:    _msg,
+                }
+                wg.Done()
+                return
+            }
+
+            params.ResChan <- &model.DeployTaskResult{
+                Params:    params,
+                ResStatus: model.TaskRunSuccess,
+                Output:    "Command: " + commandLog,
+                SwitchCmd: "ln -snf " + params.DstPath + " " + params.Project.WebRoot,
+            }
             wg.Done()
-        }(params)
+        }(params, serverConn)
     }
     wg.Wait()
 
+    //删除跳板机文件
+    _, _ = serverConn.RunCmd("rm -f " + params.DstFilePath)
     return
 }
 
@@ -244,6 +295,23 @@ func deployProcessHandle(resChan chan *model.DeployTaskResult, prepareTask *mode
     model.UpdateTaskStatusAndOutput(prepareTask.Task.TaskId, updateRes)
 }
 
+func switchSymbol(resMap []*model.DeployTaskResult) {
+    var (
+        serverConn *utils.ServerConn
+    )
+    if resMap[0].Params.Jumper.ServerId != 0 { //跳板机操作
+        // todo 跳板机切换
+        // 1. 连接跳板机.  2. [并发]执行目标机远程命令
+        return
+    }
+    for _, r := range resMap {
+        serverConn = utils.NewServerConn(r.Params.Server.SshAddr+":"+strconv.Itoa(r.Params.Server.SshPort),
+            r.Params.Server.SshUser, r.Params.Server.SshKeyPath)
+        _, _ = serverConn.RunCmd(r.SwitchCmd)
+        serverConn.Close()
+    }
+}
+
 //生成目标机脚本
 func getDeployCmd(params *model.DeployTaskRunParams, delFiles []string) {
     var deployCmd string
@@ -257,7 +325,6 @@ func getDeployCmd(params *model.DeployTaskRunParams, delFiles []string) {
         params.DstFilePath + " && cd " + params.DstPath
 
     //after command 切换软链前执行
-    fmt.Println("-------------", delFiles, len(delFiles))
     if len(delFiles) > 0 {
         deployCmd += " && rm -f " + strings.Join(delFiles, " ")
     }
@@ -281,19 +348,9 @@ func getDeployCmd(params *model.DeployTaskRunParams, delFiles []string) {
     return
 }
 
-func switchSymbol(resMap []*model.DeployTaskResult) {
-    var (
-        serverConn *utils.ServerConn
-    )
-    if resMap[0].Params.Jumper.ServerId != 0 { //跳板机操作
-        // todo 跳板机切换
-        // 1. 连接跳板机.  2. [并发]执行目标机远程命令
-        return
-    }
-    for _, r := range resMap {
-        serverConn = utils.NewServerConn(r.Params.Server.SshAddr+":"+strconv.Itoa(r.Params.Server.SshPort),
-            r.Params.Server.SshUser, r.Params.Server.SshKeyPath)
-        _, _ = serverConn.RunCmd(r.SwitchCmd)
-        serverConn.Close()
-    }
+func remoteGenCmd(server model.Server, cmd string) (remoteCmd string) {
+    //ssh -T -q corey '[ ! -d ~/a/b/ ] && mkdir -p ~/a/b/'
+    remoteCmd = "ssh -Tq -p " + strconv.Itoa(server.SshPort) + " -i " + server.SshKeyPath + " " +
+        server.SshUser + "@" + server.SshAddr + " '" + cmd + "'"
+    return
 }
