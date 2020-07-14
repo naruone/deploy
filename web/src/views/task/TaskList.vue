@@ -28,6 +28,7 @@
             </el-table-column>
             <el-table-column
                 fixed
+                width="120"
                 label="任务标题">
                 <template slot-scope="scope">
                     <el-tooltip class="item" v-if="scope.row.description!==''" effect="dark"
@@ -39,15 +40,18 @@
             </el-table-column>
             <el-table-column
                 fixed
+                width="120"
                 prop="EnvCfg.env_name"
                 label="环境">
             </el-table-column>
             <el-table-column
                 :formatter="deployTypeFormatter"
+                fixed
                 width="70"
                 label="发布类型">
             </el-table-column>
             <el-table-column
+                fixed
                 prop="branch"
                 width="80"
                 label="分支">
@@ -63,7 +67,18 @@
                 label="UUID">
             </el-table-column>
             <el-table-column
+                prop="create_at"
+                width="210"
+                label="创建时间">
+            </el-table-column>
+            <el-table-column
+                prop="update_at"
+                width="210"
+                label="更新时间">
+            </el-table-column>
+            <el-table-column
                 width="80"
+                fixed="right"
                 label="状态">
                 <template slot-scope="scope">
                     <el-popover v-if="scope.row.output!==''"
@@ -81,12 +96,6 @@
                     </el-popover>
                     <el-tag slot="reference" v-else size="mini">{{ status[scope.row.status] }}</el-tag>
                 </template>
-            </el-table-column>
-            <el-table-column
-                class-name="pre-line"
-                :formatter="timeDisplay"
-                width="210"
-                label="时间">
             </el-table-column>
             <el-table-column align="center" fixed="right" label="操作">
                 <template slot-scope="scope">

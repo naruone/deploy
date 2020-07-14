@@ -57,7 +57,7 @@
                 label="最近版本">
             </el-table-column>
             <el-table-column
-                width="270"
+                width="280"
                 prop="uuid"
                 label="UUID">
             </el-table-column>
