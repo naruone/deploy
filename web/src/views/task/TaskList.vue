@@ -66,10 +66,10 @@
                 width="80"
                 label="状态">
                 <template slot-scope="scope">
-                    <el-popover
-                        placement="left"
-                        trigger="hover"
-                        width="500">
+                    <el-popover v-if="scope.row.output!==''"
+                                placement="left"
+                                trigger="hover"
+                                width="800">
                         <TaskInfo :data="scope.row.output"></TaskInfo>
                         <el-tag slot="reference" v-if="scope.row.status === 9"
                                 type="danger" size="mini">{{status[scope.row.status] }}
@@ -79,6 +79,7 @@
                         </el-tag>
                         <el-tag slot="reference" v-else size="mini">{{ status[scope.row.status] }}</el-tag>
                     </el-popover>
+                    <el-tag slot="reference" v-else size="mini">{{ status[scope.row.status] }}</el-tag>
                 </template>
             </el-table-column>
             <el-table-column
@@ -124,7 +125,7 @@
     export default {
         name: "TaskList",
         mixins: [tableInfo],
-        components: {TaskEdit,TaskInfo},
+        components: {TaskEdit, TaskInfo},
         created() {
             this.getTableData()
         },

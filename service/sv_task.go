@@ -152,7 +152,7 @@ func deployStartDirect(params model.DeployTaskRunParams) {
     params.ResChan <- &model.DeployTaskResult{
         Params:    params,
         ResStatus: model.TaskRunSuccess,
-        Output:    params.DeployCmd,
+        Output:    "Deploy: " + params.DeployCmd,
         SwitchCmd: "ln -snf " + params.DstPath + " " + params.Project.WebRoot,
     }
     return
@@ -277,7 +277,7 @@ func deployProcessHandle(resChan chan *model.DeployTaskResult, prepareTask *mode
         }
         messages[v.Params.Server.SshAddr] = map[string]interface{}{
             "status":  v.ResStatus,
-            "message": v.Output + "\n SwitchDir: " + v.SwitchCmd,
+            "message": v.Output + "\nSwitchDir: " + v.SwitchCmd,
         }
     }
     updateRes["status"] = _status
