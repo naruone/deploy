@@ -7,6 +7,7 @@ import (
     "deploy/utils"
     "encoding/json"
     "errors"
+    "fmt"
     uuid "github.com/satori/go.uuid"
     "strconv"
     "strings"
@@ -256,6 +257,7 @@ func getDeployCmd(params *model.DeployTaskRunParams, delFiles []string) {
         params.DstFilePath + " && cd " + params.DstPath
 
     //after command 切换软链前执行
+    fmt.Println("-------------", delFiles, len(delFiles))
     if len(delFiles) > 0 {
         deployCmd += " && rm -f " + strings.Join(delFiles, " ")
     }

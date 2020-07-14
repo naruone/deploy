@@ -32,8 +32,9 @@ func DelRepository(projectId uint) {
 func GetRepository(project *model.Project) *Repository {
     rLock.Lock()
     defer rLock.Unlock()
+
+    _repoPath := strings.TrimRight(config.GConfig.Repo, "/")
     if Repos[project.ProjectId] == nil {
-        _repoPath := strings.TrimRight(config.GConfig.Repo, "/")
         _packagePath := strings.TrimRight(config.GConfig.RepoPackage, "/")
         _ = utils.CreateDir(_repoPath)
         _ = utils.CreateDir(_packagePath)
@@ -45,6 +46,7 @@ func GetRepository(project *model.Project) *Repository {
         }
     } else {
         Repos[project.ProjectId].Project = project
+        Repos[project.ProjectId].Path = _repoPath + "/" + strings.TrimLeft(project.Dst, "/")
     }
     return Repos[project.ProjectId]
 }
@@ -117,8 +119,11 @@ func (repo *Repository) Package(startVer, endVer, name string) (filename string,
         _delFile, _, err = utils.RunCmd(repo.Path, "/bin/bash", "-c", "git diff --name-status -b "+startVer+
             " "+endVer+"|grep ^D |awk '{print $2}'")
         var _dFiles []string
-        for _, v := range strings.Split(strings.TrimSpace(_delFile), "\n") {
-            _dFiles = append(_dFiles, strings.TrimSpace(v))
+        _delFile = strings.TrimSpace(_delFile)
+        if _delFile != "" {
+            for _, v := range strings.Split(_delFile, "\n") {
+                _dFiles = append(_dFiles, strings.TrimSpace(v))
+            }
         }
         delFiles = _dFiles
     }
