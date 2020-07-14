@@ -17,9 +17,9 @@
                     </el-select>
                 </el-form-item>
                 <el-form-item label="发布类型" prop="deploy_type">
-                    <el-select v-model="taskForm.deploy_type">
-                        <el-option v-for="v in dType" :key="v.value" :label="v.label" :value="v.value"/>
-                    </el-select>
+                    <el-radio-group v-model="taskForm.deploy_type">
+                        <el-radio v-for="v in dType" :label="v.value">{{v.label}}</el-radio>
+                    </el-radio-group>
                 </el-form-item>
                 <el-form-item label="分支" prop="branch">
                     <el-select @change="loadVersion(taskForm.env_id,taskForm.branch)" v-model="taskForm.branch">
@@ -64,7 +64,7 @@
                     task_id: 0,
                     task_name: '',
                     env_id: '',
-                    deploy_type: '',
+                    deploy_type: 1,
                     branch: '',
                     version: '',
                     description: '',
@@ -128,6 +128,7 @@
                 for (let k in this.taskForm) {
                     this.$set(this.taskForm, k, '')
                 }
+                this.taskForm.deploy_type = 1
                 this.$refs.taskForm.clearValidate()
                 this.envOptions = []
                 this.branchOptions = []

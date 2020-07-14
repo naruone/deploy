@@ -10,9 +10,9 @@
             <el-form :model="serverForm" :rules="serverRules" class="drawerForm" label-width="100px"
                      ref="serverForm">
                 <el-form-item label="服务器类型" prop="type">
-                    <el-select v-model="serverForm.type">
-                        <el-option v-for="v in sType" :key="v.value" :label="v.label" :value="v.value"/>
-                    </el-select>
+                    <el-radio-group v-model="serverForm.type">
+                        <el-radio v-for="v in sType" :label="v.value">{{v.label}}</el-radio>
+                    </el-radio-group>
                 </el-form-item>
                 <el-form-item label="服务器地址" prop="ssh_addr">
                     <el-input ref="pInput" v-model="serverForm.ssh_addr" autocomplete="off"></el-input>

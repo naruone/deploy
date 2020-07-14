@@ -99,7 +99,7 @@ func deployScheduleStart(prepareTask *model.TaskPrepare) {
             params.ResChan <- &model.DeployTaskResult{
                 Params:    params,
                 ResStatus: model.TaskRunFail,
-                Output:    "打包失败, 原因: " + err.Error(),
+                Output:    "PackErr: " + err.Error(),
             }
         }
         return
@@ -131,13 +131,13 @@ func deployStartDirect(params model.DeployTaskRunParams) {
         params.ResChan <- &model.DeployTaskResult{
             Params:    params,
             ResStatus: model.TaskRunFail,
-            Output:    "上传包到目标机错误: " + err.Error(),
+            Output:    "UploadErr: " + err.Error(),
         }
         return
     }
 
     if output, err = serverConn.RunCmd(params.DeployCmd); err != nil {
-        _msg := "错误原因: " + err.Error() + "\nCommand: " + params.DeployCmd
+        _msg := "DeployErr: " + err.Error() + "\nCmd: " + params.DeployCmd
         if output != "" {
             _msg += "\nOutput: " + output
         }
@@ -152,7 +152,7 @@ func deployStartDirect(params model.DeployTaskRunParams) {
     params.ResChan <- &model.DeployTaskResult{
         Params:    params,
         ResStatus: model.TaskRunSuccess,
-        Output:    "Command: " + params.DeployCmd,
+        Output:    params.DeployCmd,
         SwitchCmd: "ln -snf " + params.DstPath + " " + params.Project.WebRoot,
     }
     return
@@ -162,7 +162,7 @@ func deployStartDirect(params model.DeployTaskRunParams) {
 func deployStartByJumper(params model.DeployTaskRunParams, prepareTask *model.TaskPrepare) {
     var (
         serverConn *utils.ServerConn
-        wg         sync.WaitGroup //可以不使用, 不想改了
+        wg         sync.WaitGroup
         err        error
     )
     serverConn = utils.NewServerConn(params.Jumper.SshAddr+":"+strconv.Itoa(params.Jumper.SshPort), params.Jumper.SshUser, params.Jumper.SshKeyPath)
@@ -174,7 +174,7 @@ func deployStartByJumper(params model.DeployTaskRunParams, prepareTask *model.Ta
             params.ResChan <- &model.DeployTaskResult{
                 Params:    params,
                 ResStatus: model.TaskRunFail,
-                Output:    "上传包到跳板机错误: " + err.Error(),
+                Output:    "UploadToJumperErr: " + err.Error(),
             }
         }
         return
@@ -192,9 +192,9 @@ func deployStartByJumper(params model.DeployTaskRunParams, prepareTask *model.Ta
 
             //检测目标机工作目录
             _cmd = remoteGenCmd(p.Server, "([ -d "+path.Dir(p.DstFilePath)+" ] || mkdir -p "+path.Dir(p.DstFilePath)+")")
-            commandLog = "检测Dir: " + _cmd
+            commandLog = "CheckDir: " + _cmd
             if output, err = svrConn.RunCmd(_cmd); err != nil {
-                _msg := "错误原因 : " + err.Error() + "\nCommand: " + commandLog
+                _msg := "CheckDirError: " + err.Error() + "\nCmd: " + _cmd
                 if output != "" {
                     _msg += "\nOutput: " + output
                 }
@@ -209,9 +209,9 @@ func deployStartByJumper(params model.DeployTaskRunParams, prepareTask *model.Ta
 
             //上传包到目标机
             _cmd = "scp -i " + p.Server.SshKeyPath + " " + p.DstFilePath + " " + p.Server.SshUser + "@" + p.Server.SshAddr + ":" + p.DstFilePath
-            commandLog += "\n上传包: " + _cmd
+            commandLog += "\nUpload: " + _cmd
             if output, err = svrConn.RunCmd(_cmd); err != nil {
-                _msg := "上传包到目标机错误 : " + err.Error() + "\nCommand: " + commandLog
+                _msg := "UploadErr: " + err.Error() + "\nCmd: " + _cmd
                 if output != "" {
                     _msg += "\nOutput: " + output
                 }
@@ -225,9 +225,9 @@ func deployStartByJumper(params model.DeployTaskRunParams, prepareTask *model.Ta
             }
             //执行发布
             _cmd = remoteGenCmd(p.Server, p.DeployCmd)
-            commandLog += "\n代码发布: " + _cmd
+            commandLog += "\nDeploy: " + _cmd
             if output, err = svrConn.RunCmd(_cmd); err != nil {
-                _msg := "发布失败 : " + err.Error() + "\nCommand: " + commandLog
+                _msg := "DeployErr : " + err.Error() + "\nCmd: " + _cmd
                 if output != "" {
                     _msg += "\nOutput: " + output
                 }
@@ -242,7 +242,7 @@ func deployStartByJumper(params model.DeployTaskRunParams, prepareTask *model.Ta
             params.ResChan <- &model.DeployTaskResult{
                 Params:    p,
                 ResStatus: model.TaskRunSuccess,
-                Output:    "Command: " + commandLog,
+                Output:    commandLog,
                 SwitchCmd: "ln -snf " + params.DstPath + " " + params.Project.WebRoot,
             }
             wg.Done()
@@ -277,7 +277,7 @@ func deployProcessHandle(resChan chan *model.DeployTaskResult, prepareTask *mode
         }
         messages[v.Params.Server.SshAddr] = map[string]interface{}{
             "status":  v.ResStatus,
-            "message": v.Output + "\n切换: " + v.SwitchCmd,
+            "message": v.Output + "\n SwitchDir: " + v.SwitchCmd,
         }
     }
     updateRes["status"] = _status

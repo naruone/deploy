@@ -17,46 +17,56 @@
             <el-button @click="editCfg({})"><i class="el-icon-plus"></i> 新增配置</el-button>
         </div>
         <el-table
-                :data="tableData"
-                border
-                style="width: 100%">
+            :data="tableData"
+            border
+            style="width: 100%">
             <el-table-column
-                    prop="env_id"
-                    label="ID"
-                    width="40">
+                fixed
+                prop="env_id"
+                label="ID"
+                width="40">
             </el-table-column>
             <el-table-column
-                    prop="env_name"
-                    label="环境名称">
+                prop="env_name"
+                fixed
+                width="120"
+                label="环境名称">
             </el-table-column>
             <el-table-column
-                    prop="Project.project_name"
-                    label="项目">
+                fixed
+                width="120"
+                prop="Project.project_name"
+                label="项目">
             </el-table-column>
             <el-table-column
-                    class-name="pre-line"
-                    :formatter="serversFormatter"
-                    label="服务器">
+                fixed
+                class-name="pre-line"
+                width="120"
+                :formatter="serversFormatter"
+                label="服务器">
             </el-table-column>
             <el-table-column
-                    :formatter="jumperFormatter"
-                    label="跳板机">
+                fixed
+                :formatter="jumperFormatter"
+                width="120"
+                label="跳板机">
             </el-table-column>
             <el-table-column
-                    prop="last_ver"
-                    label="最近版本">
+                prop="last_ver"
+                width="100"
+                label="最近版本">
             </el-table-column>
             <el-table-column
-                    width="150"
-                    prop="uuid"
-                    label="UUID">
+                width="270"
+                prop="uuid"
+                label="UUID">
             </el-table-column>
             <el-table-column
                 width="200"
                 prop="create_at"
                 label="创建时间">
             </el-table-column>
-            <el-table-column align="center" label="操作">
+            <el-table-column align="center" label="操作" fixed="right">
                 <template slot-scope="scope">
                     <el-button type="primary" icon="el-icon-edit" circle
                                @click="editCfg(scope.row)"
@@ -69,13 +79,13 @@
         </el-table>
         <div class="page-content">
             <el-pagination
-                    @size-change="handleSizeChange"
-                    @current-change="handleCurrentChange"
-                    :current-page="currentPage"
-                    :page-sizes="[10, 20, 50, 100]"
-                    :page-size="pageSize"
-                    layout="total, sizes, prev, pager, next, jumper"
-                    :total="total">
+                @size-change="handleSizeChange"
+                @current-change="handleCurrentChange"
+                :current-page="currentPage"
+                :page-sizes="[10, 20, 50, 100]"
+                :page-size="pageSize"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="total">
             </el-pagination>
         </div>
         <CfgEdit ref="cfgEditorFormDrawer"></CfgEdit>

@@ -22,18 +22,23 @@
             style="width: 100%">
             <el-table-column
                 prop="task_id"
+                fixed
                 label="ID"
                 width="40">
             </el-table-column>
             <el-table-column
+                fixed
                 label="任务标题">
                 <template slot-scope="scope">
-                    <el-tooltip class="item" effect="dark" :content="scope.row.description" placement="right">
+                    <el-tooltip class="item" v-if="scope.row.description!==''" effect="dark"
+                                :content="scope.row.description" placement="top">
                         <span>{{scope.row.task_name}}</span>
                     </el-tooltip>
+                    <span v-else>{{scope.row.task_name}}</span>
                 </template>
             </el-table-column>
             <el-table-column
+                fixed
                 prop="EnvCfg.env_name"
                 label="环境">
             </el-table-column>
@@ -49,7 +54,7 @@
             </el-table-column>
             <el-table-column
                 prop="version"
-                width="80"
+                width="100"
                 label="版本">
             </el-table-column>
             <el-table-column
@@ -61,17 +66,19 @@
                 width="80"
                 label="状态">
                 <template slot-scope="scope">
-                    <el-tooltip v-if="scope.row.status === 9" placement="top-end" effect="dark">
-                        <div slot="content">
-                            失败原因:
-                            <pre>{{scope.row.output}}</pre>
-                        </div>
-                        <el-tag type="danger" size="mini">{{ status[scope.row.status] }}</el-tag>
-                    </el-tooltip>
-                    <el-tag v-else-if="scope.row.status === 8" type="success" size="mini">
-                        {{ status[scope.row.status] }}
-                    </el-tag>
-                    <el-tag v-else size="mini">{{ status[scope.row.status] }}</el-tag>
+                    <el-popover
+                        placement="left"
+                        trigger="hover"
+                        width="500">
+                        <TaskInfo :data="scope.row.output"></TaskInfo>
+                        <el-tag slot="reference" v-if="scope.row.status === 9"
+                                type="danger" size="mini">{{status[scope.row.status] }}
+                        </el-tag>
+                        <el-tag slot="reference" v-else-if="scope.row.status === 8"
+                                type="success" size="mini">{{ status[scope.row.status] }}
+                        </el-tag>
+                        <el-tag slot="reference" v-else size="mini">{{ status[scope.row.status] }}</el-tag>
+                    </el-popover>
                 </template>
             </el-table-column>
             <el-table-column
@@ -80,7 +87,7 @@
                 width="210"
                 label="时间">
             </el-table-column>
-            <el-table-column align="center" label="操作">
+            <el-table-column align="center" fixed="right" label="操作">
                 <template slot-scope="scope">
                     <el-tooltip v-if="scope.row.status === 1" content="发布" placement="top" effect="dark">
                         <el-button @click="deployTask(scope.row)" type="primary" icon="el-icon-upload"
@@ -111,12 +118,13 @@
 <script>
     import tableInfo from "../../plugins/mixins/tableInfo";
     import TaskEdit from "./cpns/TaskEdit";
+    import TaskInfo from "./cpns/TaskInfo";
     import {getTaskList, deleteTask, deployTask} from "../../api/task";
 
     export default {
         name: "TaskList",
         mixins: [tableInfo],
-        components: {TaskEdit},
+        components: {TaskEdit,TaskInfo},
         created() {
             this.getTableData()
         },
