@@ -191,7 +191,7 @@ func deployStartByJumper(params model.DeployTaskRunParams, prepareTask *model.Ta
             )
 
             //检测目标机工作目录
-            _cmd = remoteGenCmd(p.Server, "([ ! -d "+path.Dir(p.DstFilePath)+" ] && mkdir -p "+path.Dir(p.DstFilePath)+")")
+            _cmd = remoteGenCmd(p.Server, "([ -d "+path.Dir(p.DstFilePath)+" ] || mkdir -p "+path.Dir(p.DstFilePath)+")")
             commandLog = "检测Dir: " + _cmd
             if output, err = svrConn.RunCmd(_cmd); err != nil {
                 _msg := "错误原因 : " + err.Error() + "\nCommand: " + commandLog
@@ -208,7 +208,7 @@ func deployStartByJumper(params model.DeployTaskRunParams, prepareTask *model.Ta
             }
 
             //上传包到目标机
-            _cmd = "scp -i " + p.Server.SshKeyPath + " " + p.PackagePath + " " + p.Server.SshUser + "@" + p.Server.SshAddr + ":" + p.DstFilePath
+            _cmd = "scp -i " + p.Server.SshKeyPath + " " + p.DstFilePath + " " + p.Server.SshUser + "@" + p.Server.SshAddr + ":" + p.DstFilePath
             commandLog += "\n上传包: " + _cmd
             if output, err = svrConn.RunCmd(_cmd); err != nil {
                 _msg := "上传包到目标机错误 : " + err.Error() + "\nCommand: " + commandLog
@@ -223,7 +223,6 @@ func deployStartByJumper(params model.DeployTaskRunParams, prepareTask *model.Ta
                 wg.Done()
                 return
             }
-
             //执行发布
             _cmd = remoteGenCmd(p.Server, p.DeployCmd)
             commandLog += "\n代码发布: " + _cmd
@@ -240,9 +239,8 @@ func deployStartByJumper(params model.DeployTaskRunParams, prepareTask *model.Ta
                 wg.Done()
                 return
             }
-
             params.ResChan <- &model.DeployTaskResult{
-                Params:    params,
+                Params:    p,
                 ResStatus: model.TaskRunSuccess,
                 Output:    "Command: " + commandLog,
                 SwitchCmd: "ln -snf " + params.DstPath + " " + params.Project.WebRoot,

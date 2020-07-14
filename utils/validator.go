@@ -11,8 +11,6 @@ type Rules map[string][]string
 
 type RulesMap map[string]Rules
 
-var CustomizeMap = make(map[string]Rules)
-
 // 非空 不能为其对应类型的0值
 func NotEmpty() string {
     return "notEmpty"
