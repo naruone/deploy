@@ -8,14 +8,14 @@ import (
 )
 
 type Server struct {
-    ServerId int       `json:"server_id" gorm:"PRIMARY_KEY"`
-    Type     int       `json:"type"`
-    SshAddr  string    `json:"ssh_addr"`
-    SshPort  int       `json:"ssh_port"`
-    SshUser  string    `json:"ssh_user"`
-    SshKey   string    `json:"-"`
-    CreateAt time.Time `json:"create_at"`
-    UpdateAt time.Time `json:"update_at"`
+    ServerId   int       `json:"server_id" gorm:"PRIMARY_KEY"`
+    Type       int       `json:"type"`
+    SshAddr    string    `json:"ssh_addr"`
+    SshPort    int       `json:"ssh_port"`
+    SshUser    string    `json:"ssh_user"`
+    SshKeyPath string    `json:"ssh_key_path"`
+    CreateAt   time.Time `json:"create_at"`
+    UpdateAt   time.Time `json:"update_at"`
 }
 
 const (
@@ -53,14 +53,12 @@ func SaveServer(p *Server) (err error) {
         err = mdb.Save(p).Error
     } else {
         _updateParams := map[string]interface{}{
-            "type":      p.Type,
-            "ssh_addr":  p.SshAddr,
-            "ssh_port":  p.SshPort,
-            "ssh_user":  p.SshUser,
-            "update_at": time.Now(),
-        }
-        if p.SshKey != "" {
-            _updateParams["ssh_key"] = p.SshKey
+            "type":         p.Type,
+            "ssh_addr":     p.SshAddr,
+            "ssh_port":     p.SshPort,
+            "ssh_user":     p.SshUser,
+            "ssh_key_path": p.SshKeyPath,
+            "update_at":    time.Now(),
         }
         err = mdb.Model(p).Updates(_updateParams).Error
     }

@@ -6,24 +6,26 @@ import (
     "github.com/pkg/sftp"
     "golang.org/x/crypto/ssh"
     "io"
+    "io/ioutil"
     "net"
     "os"
     "path"
 )
 
 type ServerConn struct {
-    addr       string
-    user       string
-    privateKey string
-    sshClient  *ssh.Client
-    sftpClient *sftp.Client
+    addr           string
+    user           string
+    privateKey     string
+    privateKeyPath string
+    sshClient      *ssh.Client
+    sftpClient     *sftp.Client
 }
 
-func NewServerConn(addr, user, privateKey string) *ServerConn {
+func NewServerConn(addr, user, privateKeyPath string) *ServerConn {
     return &ServerConn{
-        addr:       addr,
-        user:       user,
-        privateKey: privateKey,
+        addr:           addr,
+        user:           user,
+        privateKeyPath: privateKeyPath,
     }
 }
 
@@ -33,6 +35,7 @@ func (s *ServerConn) getSshConnect() (sshClient *ssh.Client, err error) {
         keys   []ssh.Signer
         config ssh.ClientConfig
         signer ssh.Signer
+        buffer []byte
     )
     if s.sshClient != nil {
         sshClient = s.sshClient
@@ -44,7 +47,11 @@ func (s *ServerConn) getSshConnect() (sshClient *ssh.Client, err error) {
             return nil
         },
     }
-    if signer, err = ssh.ParsePrivateKey([]byte(s.privateKey)); err != nil {
+    if buffer, err = ioutil.ReadFile(s.privateKeyPath); err != nil {
+        err = fmt.Errorf("IP: %s 读取私钥失败: %v", s.addr, err)
+        return
+    }
+    if signer, err = ssh.ParsePrivateKey(buffer); err != nil {
         err = fmt.Errorf("连接服务器失败[%s] : %v", s.addr, err.Error())
         return
     }

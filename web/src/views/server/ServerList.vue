@@ -37,12 +37,17 @@
             </el-table-column>
             <el-table-column
                 prop="ssh_addr"
+                width="120"
                 label="服务器地址">
             </el-table-column>
             <el-table-column
                 prop="ssh_port"
-                width="120"
+                width="100"
                 label="服务器端口">
+            </el-table-column>
+            <el-table-column
+                prop="ssh_key_path"
+                label="私钥路径">
             </el-table-column>
             <el-table-column
                 width="200"

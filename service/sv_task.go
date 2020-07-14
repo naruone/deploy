@@ -124,7 +124,7 @@ func deployStartDirect(params model.DeployTaskRunParams) {
         output     string
         err        error
     )
-    serverConn = utils.NewServerConn(params.Server.SshAddr+":"+strconv.Itoa(params.Server.SshPort), params.Server.SshUser, params.Server.SshKey)
+    serverConn = utils.NewServerConn(params.Server.SshAddr+":"+strconv.Itoa(params.Server.SshPort), params.Server.SshUser, params.Server.SshKeyPath)
     defer serverConn.Close()
     //上传包
     if err = serverConn.CopyFile(params.PackagePath, params.DstFilePath); err != nil {
@@ -165,7 +165,7 @@ func deployStartByJumper(params model.DeployTaskRunParams, prepareTask *model.Ta
         wg         sync.WaitGroup
         err        error
     )
-    serverConn = utils.NewServerConn(params.Jumper.SshAddr+":"+strconv.Itoa(params.Jumper.SshPort), params.Jumper.SshUser, params.Jumper.SshKey)
+    serverConn = utils.NewServerConn(params.Jumper.SshAddr+":"+strconv.Itoa(params.Jumper.SshPort), params.Jumper.SshUser, params.Jumper.SshKeyPath)
     defer serverConn.Close()
 
     if err = serverConn.CopyFile(params.PackagePath, params.DstFilePath); err != nil {
@@ -292,7 +292,7 @@ func switchSymbol(resMap []*model.DeployTaskResult) {
     }
     for _, r := range resMap {
         serverConn = utils.NewServerConn(r.Params.Server.SshAddr+":"+strconv.Itoa(r.Params.Server.SshPort),
-            r.Params.Server.SshUser, r.Params.Server.SshKey)
+            r.Params.Server.SshUser, r.Params.Server.SshKeyPath)
         _, _ = serverConn.RunCmd(r.SwitchCmd)
         serverConn.Close()
     }

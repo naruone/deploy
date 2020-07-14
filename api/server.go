@@ -31,25 +31,18 @@ func GetServerList(c *gin.Context) {
 }
 
 func SaveServer(c *gin.Context) {
-    type sshKey struct {
-        model.Server
-        SshKey string `json:"ssh_key"`
-    }
     var (
         server       model.Server
         serverVerify map[string][]string
         err          error
     )
-    var _sshKey sshKey
-    _ = c.ShouldBindJSON(&_sshKey)
-    server = _sshKey.Server
-    server.SshKey = _sshKey.SshKey
+    _ = c.ShouldBindJSON(&server)
     serverVerify = utils.Rules{
-        "Type":    {utils.NotEmpty(), utils.Le("2"), utils.Ge("1")},
-        "SshAddr": {utils.NotEmpty()},
-        "SshPort": {utils.NotEmpty(), utils.Ge("1"), utils.Le("65535")},
-        "SshUser": {utils.NotEmpty(), utils.Ge("3"), utils.Le("200")},
-        "SshKey":  {utils.Le("5000")},
+        "Type":       {utils.NotEmpty(), utils.Le("2"), utils.Ge("1")},
+        "SshAddr":    {utils.NotEmpty()},
+        "SshPort":    {utils.NotEmpty(), utils.Ge("1"), utils.Le("65535")},
+        "SshUser":    {utils.NotEmpty(), utils.Ge("3"), utils.Le("200")},
+        "SshKeyPath": {utils.NotEmpty(), utils.Le("300")},
     }
     if err = utils.Verify(server, serverVerify); err != nil {
         utils.FailWithMessage(err.Error(), c)

@@ -23,9 +23,8 @@
                 <el-form-item label="用户名" prop="ssh_user">
                     <el-input v-model="serverForm.ssh_user" autocomplete="off"></el-input>
                 </el-form-item>
-                <el-form-item label="秘钥" prop="ssh_key">
-                    <el-input :autosize="{maxRows:10,minRows:4}" type="textarea" v-model="serverForm.ssh_key"
-                              autocomplete="off"></el-input>
+                <el-form-item label="秘钥Path" prop="ssh_key_path">
+                    <el-input v-model="serverForm.ssh_key_path" autocomplete="off"></el-input>
                 </el-form-item>
                 <el-form-item>
                     <el-button @click="handleClose">取 消</el-button>
@@ -57,7 +56,7 @@
                     ssh_addr: '',
                     ssh_port: 22,
                     ssh_user: '',
-                    ssh_key: '',
+                    ssh_key_path: '',
                 },
                 serverRules: {
                     type: [
@@ -74,8 +73,9 @@
                         {required: true, message: '用户名必填', trigger: 'blur'},
                         {min: 3, max: 200, message: '长度在3到200个字符', trigger: 'blur'}
                     ],
-                    ssh_key: [
-                        {max: 5000, message: '长度小于5000个字符', trigger: 'blur'}
+                    ssh_key_path: [
+                        {required: true, message: 'ssh key 路径必填', trigger: 'blur'},
+                        {max: 300, message: '长度小于300个字符', trigger: 'blur'}
                     ],
                 }
             }
