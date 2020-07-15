@@ -54,7 +54,7 @@
                 prop="create_at"
                 label="创建时间">
             </el-table-column>
-            <el-table-column align="center" label="操作" width="200">
+            <el-table-column align="center" label="操作" width="120">
                 <template slot-scope="scope">
                     <el-button type="primary" icon="el-icon-edit" circle
                                @click="editServer(scope.row)"
