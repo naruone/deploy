@@ -289,23 +289,79 @@ func deployProcessHandle(resChan chan *model.DeployTaskResult, prepareTask *mode
         }
         switchSymbol(resMap)
         model.UpdateEnvRes(prepareTask.Env.EnvId, prepareTask.Task.Version, _uuid)
+    } else {
+        collectResource(resMap)
+    }
+    if len(resMap) > 0 { //删除本地打包
+        utils.DeletePath(resMap[0].Params.PackagePath)
     }
     model.UpdateTaskStatusAndOutput(prepareTask.Task.TaskId, updateRes)
 }
 
+//切换工作目录
 func switchSymbol(resMap []*model.DeployTaskResult) {
     var (
         serverConn *utils.ServerConn
+        _oneRes    *model.DeployTaskResult
+        wg         sync.WaitGroup
     )
-    if resMap[0].Params.Jumper.ServerId != 0 { //跳板机操作
-        // todo 跳板机切换
+    _oneRes = resMap[0]                      //随便取一条结果用做判断
+    if _oneRes.Params.Jumper.ServerId != 0 { //跳板机操作
         // 1. 连接跳板机.  2. [并发]执行目标机远程命令
+        serverConn = utils.NewServerConn(_oneRes.Params.Jumper.SshAddr+":"+strconv.Itoa(_oneRes.Params.Jumper.SshPort),
+            _oneRes.Params.Jumper.SshUser, _oneRes.Params.Jumper.SshKeyPath)
+        wg.Add(len(resMap))
+        for _, v := range resMap {
+            go func(res *model.DeployTaskResult) {
+                //todo 切换目录链接可能失败, 暂不增加逻辑, 需要时可在此处增加日志写入任务逻辑
+                _, _ = serverConn.RunCmd(remoteGenCmd(res.Params.Server, res.SwitchCmd))
+                wg.Done()
+            }(v)
+        }
+        wg.Wait()
+        serverConn.Close()
         return
     }
+
     for _, r := range resMap {
         serverConn = utils.NewServerConn(r.Params.Server.SshAddr+":"+strconv.Itoa(r.Params.Server.SshPort),
             r.Params.Server.SshUser, r.Params.Server.SshKeyPath)
+        //todo 切换目录链接可能失败, 暂不增加逻辑, 需要时可在此处增加日志写入任务逻辑
         _, _ = serverConn.RunCmd(r.SwitchCmd)
+        serverConn.Close()
+    }
+}
+
+//回收资源
+func collectResource(resMap []*model.DeployTaskResult) {
+    var (
+        serverConn *utils.ServerConn
+        _oneRes    *model.DeployTaskResult
+        wg         sync.WaitGroup
+    )
+    _oneRes = resMap[0]                      //随便取一条结果用做判断
+    if _oneRes.Params.Jumper.ServerId != 0 { //跳板机操作
+        // 1. 连接跳板机.  2. [并发]执行目标机远程命令
+        serverConn = utils.NewServerConn(_oneRes.Params.Jumper.SshAddr+":"+strconv.Itoa(_oneRes.Params.Jumper.SshPort),
+            _oneRes.Params.Jumper.SshUser, _oneRes.Params.Jumper.SshKeyPath)
+        wg.Add(len(resMap))
+        for _, v := range resMap {
+            go func(res *model.DeployTaskResult) {
+                _, _ = serverConn.RunCmd(remoteGenCmd(res.Params.Server, "rm -f "+res.Params.DstFilePath))
+                _, _ = serverConn.RunCmd(remoteGenCmd(res.Params.Server, "rm -f "+res.Params.DstPath))
+                wg.Done()
+            }(v)
+        }
+        wg.Wait()
+        serverConn.Close()
+        return
+    }
+
+    for _, r := range resMap {
+        serverConn = utils.NewServerConn(r.Params.Server.SshAddr+":"+strconv.Itoa(r.Params.Server.SshPort),
+            r.Params.Server.SshUser, r.Params.Server.SshKeyPath)
+        _, _ = serverConn.RunCmd("rm -f " + r.Params.DstPath)
+        _, _ = serverConn.RunCmd("rm -f " + r.Params.DstFilePath)
         serverConn.Close()
     }
 }
@@ -347,7 +403,7 @@ func getDeployCmd(params *model.DeployTaskRunParams, delFiles []string) {
 }
 
 func remoteGenCmd(server model.Server, cmd string) (remoteCmd string) {
-    //ssh -T -q corey '[ ! -d ~/a/b/ ] && mkdir -p ~/a/b/'
+    //ssh -T -q -i ~/.ss/key_rsa www@123.123.123.123 '[ ! -d ~/a/b/ ] && mkdir -p ~/a/b/'
     remoteCmd = "ssh -Tq -p " + strconv.Itoa(server.SshPort) + " -i " + server.SshKeyPath + " " +
         server.SshUser + "@" + server.SshAddr + " '" + cmd + "'"
     return

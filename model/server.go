@@ -69,3 +69,8 @@ func SaveServer(p *Server) (err error) {
     }
     return
 }
+
+func GetServerById(serverId int) (server Server) {
+    mdb.Where("server_id = ?", serverId).First(&server)
+    return
+}

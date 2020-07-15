@@ -11,6 +11,14 @@ func ServerList(search *request.ComPageInfo) ([]model.Server, int, error) {
 }
 
 func SaveServer(s *model.Server) (err error) {
+    if s.ServerId != 0 {
+        server := model.GetServerById(s.ServerId)
+        if server.Type != s.Type { //如果修改了服务器类型则需要判断当前类型是否被使用
+            if err = model.IsServerUsed(s.ServerId); err != nil {
+                return
+            }
+        }
+    }
     return model.SaveServer(s)
 }
 

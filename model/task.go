@@ -109,7 +109,7 @@ func IsServerUsed(serverId int) (err error) {
         return
     }
     if total > 0 {
-        err = errors.New("该服务已被占用, 请先删除对应配置")
+        err = errors.New("该服务已被占用, 不允许修改&删除")
     }
     return
 }
