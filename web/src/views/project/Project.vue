@@ -69,7 +69,7 @@
                 prop="create_at"
                 label="创建时间">
             </el-table-column>
-            <el-table-column align="center" label="操作" width="120">
+            <el-table-column align="center" label="操作" width="180">
                 <template slot-scope="scope">
                     <el-button type="primary" icon="el-icon-edit" circle
                                @click="editProject(scope.row)"
