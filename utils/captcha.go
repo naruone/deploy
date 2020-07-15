@@ -3,7 +3,6 @@ package utils
 import (
     "bytes"
     "deploy/config"
-    "fmt"
     "github.com/dchest/captcha"
     "net/http"
     "path"
@@ -16,12 +15,10 @@ func GinCaptchaServeHTTP(w http.ResponseWriter, r *http.Request) {
     dir, file := path.Split(r.URL.Path)
     ext := path.Ext(file)
     id := file[:len(file)-len(ext)]
-    fmt.Println(dir, file)
     if ext == "" || id == "" {
         http.NotFound(w, r)
         return
     }
-    fmt.Println("reload : " + r.FormValue("reload"))
     if r.FormValue("reload") != "" {
         captcha.Reload(id)
     }
