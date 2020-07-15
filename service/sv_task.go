@@ -347,8 +347,8 @@ func collectResource(resMap []*model.DeployTaskResult) {
         wg.Add(len(resMap))
         for _, v := range resMap {
             go func(res *model.DeployTaskResult) {
+                _, _ = serverConn.RunCmd(remoteGenCmd(res.Params.Server, "rm -rf "+res.Params.DstPath))
                 _, _ = serverConn.RunCmd(remoteGenCmd(res.Params.Server, "rm -f "+res.Params.DstFilePath))
-                _, _ = serverConn.RunCmd(remoteGenCmd(res.Params.Server, "rm -f "+res.Params.DstPath))
                 wg.Done()
             }(v)
         }
@@ -360,7 +360,7 @@ func collectResource(resMap []*model.DeployTaskResult) {
     for _, r := range resMap {
         serverConn = utils.NewServerConn(r.Params.Server.SshAddr+":"+strconv.Itoa(r.Params.Server.SshPort),
             r.Params.Server.SshUser, r.Params.Server.SshKeyPath)
-        _, _ = serverConn.RunCmd("rm -f " + r.Params.DstPath)
+        _, _ = serverConn.RunCmd("rm -rf " + r.Params.DstPath)
         _, _ = serverConn.RunCmd("rm -f " + r.Params.DstFilePath)
         serverConn.Close()
     }
