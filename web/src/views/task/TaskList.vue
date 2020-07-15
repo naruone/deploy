@@ -97,7 +97,7 @@
                     <el-tag slot="reference" v-else size="mini">{{ status[scope.row.status] }}</el-tag>
                 </template>
             </el-table-column>
-            <el-table-column align="center" fixed="right" label="操作">
+            <el-table-column align="center" width="120" fixed="right" label="操作">
                 <template slot-scope="scope">
                     <el-tooltip v-if="scope.row.status === 1" content="发布" placement="top" effect="dark">
                         <el-button @click="deployTask(scope.row)" type="primary" icon="el-icon-upload"
