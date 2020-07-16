@@ -102,7 +102,17 @@ func deployScheduleStart(prepareTask *model.TaskPrepare) {
                 Output:    "PackErr: " + err.Error(),
             }
         }
+        ProcessListenChan <- &TaskProcessReport{
+            Task:    prepareTask.Task,
+            Process: TaskProcessPack,
+            Result:  TaskFail,
+        }
         return
+    }
+    ProcessListenChan <- &TaskProcessReport{
+        Task:    prepareTask.Task,
+        Process: TaskProcessPack,
+        Result:  TaskSuccess,
     }
 
     //组合目标机
@@ -133,7 +143,19 @@ func deployStartDirect(params model.DeployTaskRunParams) {
             ResStatus: model.TaskRunFail,
             Output:    "UploadErr: " + err.Error(),
         }
+        ProcessListenChan <- &TaskProcessReport{
+            Task:    params.Task,
+            Server:  params.Server,
+            Process: TaskProcessUploadDst,
+            Result:  TaskFail,
+        }
         return
+    }
+    ProcessListenChan <- &TaskProcessReport{
+        Task:    params.Task,
+        Server:  params.Server,
+        Process: TaskProcessUploadDst,
+        Result:  TaskSuccess,
     }
 
     if output, err = serverConn.RunCmd(params.DeployCmd); err != nil {
@@ -146,6 +168,12 @@ func deployStartDirect(params model.DeployTaskRunParams) {
             ResStatus: model.TaskRunFail,
             Output:    _msg,
         }
+        ProcessListenChan <- &TaskProcessReport{
+            Task:    params.Task,
+            Server:  params.Server,
+            Process: TaskProcessDeploy,
+            Result:  TaskFail,
+        }
         return
     }
 
@@ -154,6 +182,12 @@ func deployStartDirect(params model.DeployTaskRunParams) {
         ResStatus: model.TaskRunSuccess,
         Output:    "Deploy: " + params.DeployCmd,
         SwitchCmd: "ln -snf " + params.DstPath + " " + params.Project.WebRoot,
+    }
+    ProcessListenChan <- &TaskProcessReport{
+        Task:    params.Task,
+        Server:  params.Server,
+        Process: TaskProcessDeploy,
+        Result:  TaskSuccess,
     }
     return
 }
@@ -177,8 +211,19 @@ func deployStartByJumper(params model.DeployTaskRunParams, prepareTask *model.Ta
                 Output:    "UploadToJumperErr: " + err.Error(),
             }
         }
+        ProcessListenChan <- &TaskProcessReport{
+            Task:    params.Task,
+            Process: TaskProcessUploadToJumper,
+            Result:  TaskFail,
+        }
         return
     }
+    ProcessListenChan <- &TaskProcessReport{
+        Task:    params.Task,
+        Process: TaskProcessUploadToJumper,
+        Result:  TaskSuccess,
+    }
+
     wg.Add(len(prepareTask.Servers))
     for _, _sv := range prepareTask.Servers {
         params.Server = _sv
@@ -190,22 +235,10 @@ func deployStartByJumper(params model.DeployTaskRunParams, prepareTask *model.Ta
                 err        error
             )
 
-            //检测目标机工作目录
+            //检测&创建目标机工作目录
             _cmd = remoteGenCmd(p.Server, "([ -d "+path.Dir(p.DstFilePath)+" ] || mkdir -p "+path.Dir(p.DstFilePath)+")")
             commandLog = "CheckDir: " + _cmd
-            if output, err = svrConn.RunCmd(_cmd); err != nil {
-                _msg := "CheckDirError: " + err.Error() + "\nCmd: " + _cmd
-                if output != "" {
-                    _msg += "\nOutput: " + output
-                }
-                params.ResChan <- &model.DeployTaskResult{
-                    Params:    p,
-                    ResStatus: model.TaskRunFail,
-                    Output:    _msg,
-                }
-                wg.Done()
-                return
-            }
+            _, _ = svrConn.RunCmd(_cmd)
 
             //上传包到目标机
             _cmd = "scp -i " + p.Server.SshKeyPath + " " + p.DstFilePath + " " + p.Server.SshUser + "@" + p.Server.SshAddr + ":" + p.DstFilePath
@@ -220,9 +253,22 @@ func deployStartByJumper(params model.DeployTaskRunParams, prepareTask *model.Ta
                     ResStatus: model.TaskRunFail,
                     Output:    _msg,
                 }
+                ProcessListenChan <- &TaskProcessReport{
+                    Task:    params.Task,
+                    Server:  params.Server,
+                    Process: TaskProcessUploadDst,
+                    Result:  TaskFail,
+                }
                 wg.Done()
                 return
             }
+            ProcessListenChan <- &TaskProcessReport{
+                Task:    params.Task,
+                Server:  params.Server,
+                Process: TaskProcessUploadDst,
+                Result:  TaskSuccess,
+            }
+
             //执行发布
             _cmd = remoteGenCmd(p.Server, p.DeployCmd)
             commandLog += "\nDeploy: " + _cmd
@@ -236,6 +282,12 @@ func deployStartByJumper(params model.DeployTaskRunParams, prepareTask *model.Ta
                     ResStatus: model.TaskRunFail,
                     Output:    _msg,
                 }
+                ProcessListenChan <- &TaskProcessReport{
+                    Task:    params.Task,
+                    Server:  params.Server,
+                    Process: TaskProcessDeploy,
+                    Result:  TaskFail,
+                }
                 wg.Done()
                 return
             }
@@ -244,6 +296,12 @@ func deployStartByJumper(params model.DeployTaskRunParams, prepareTask *model.Ta
                 ResStatus: model.TaskRunSuccess,
                 Output:    commandLog,
                 SwitchCmd: "ln -snf " + params.DstPath + " " + params.Project.WebRoot,
+            }
+            ProcessListenChan <- &TaskProcessReport{
+                Task:    params.Task,
+                Server:  params.Server,
+                Process: TaskProcessDeploy,
+                Result:  TaskSuccess,
             }
             wg.Done()
         }(params, serverConn)
@@ -313,8 +371,21 @@ func switchSymbol(resMap []*model.DeployTaskResult) {
         wg.Add(len(resMap))
         for _, v := range resMap {
             go func(res *model.DeployTaskResult) {
-                //todo 切换目录链接可能失败, 暂不增加逻辑, 需要时可在此处增加日志写入任务逻辑
-                _, _ = serverConn.RunCmd(remoteGenCmd(res.Params.Server, res.SwitchCmd))
+                if _, err := serverConn.RunCmd(remoteGenCmd(res.Params.Server, res.SwitchCmd)); err != nil {
+                    ProcessListenChan <- &TaskProcessReport{
+                        Task:    res.Params.Task,
+                        Server:  res.Params.Server,
+                        Process: TaskProcessChangeWorkDir,
+                        Result:  TaskFail,
+                    }
+                } else {
+                    ProcessListenChan <- &TaskProcessReport{
+                        Task:    res.Params.Task,
+                        Server:  res.Params.Server,
+                        Process: TaskProcessChangeWorkDir,
+                        Result:  TaskSuccess,
+                    }
+                }
                 wg.Done()
             }(v)
         }
@@ -326,8 +397,22 @@ func switchSymbol(resMap []*model.DeployTaskResult) {
     for _, r := range resMap {
         serverConn = utils.NewServerConn(r.Params.Server.SshAddr+":"+strconv.Itoa(r.Params.Server.SshPort),
             r.Params.Server.SshUser, r.Params.Server.SshKeyPath)
-        //todo 切换目录链接可能失败, 暂不增加逻辑, 需要时可在此处增加日志写入任务逻辑
-        _, _ = serverConn.RunCmd(r.SwitchCmd)
+
+        if _, err := serverConn.RunCmd(r.SwitchCmd); err != nil {
+            ProcessListenChan <- &TaskProcessReport{
+                Task:    r.Params.Task,
+                Server:  r.Params.Server,
+                Process: TaskProcessChangeWorkDir,
+                Result:  TaskFail,
+            }
+        } else {
+            ProcessListenChan <- &TaskProcessReport{
+                Task:    r.Params.Task,
+                Server:  r.Params.Server,
+                Process: TaskProcessChangeWorkDir,
+                Result:  TaskSuccess,
+            }
+        }
         serverConn.Close()
     }
 }
