@@ -4,6 +4,7 @@ import (
     "deploy/config"
     "deploy/model"
     "deploy/router"
+    "deploy/service"
     "fmt"
     "github.com/gin-gonic/gin"
     "log"
@@ -44,6 +45,6 @@ func main() {
     //初始化配置
     config.InitConfig()
     model.InitModels()
-
+    go service.SchedulerDeployInfo()
     StartServer()
 }

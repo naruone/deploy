@@ -61,6 +61,7 @@ func InitRouters() (router *gin.Engine) {
         taskRouter.GET("getVersions", api.GetVersions)
         taskRouter.GET("getEnvOptions", api.GetEnvOptions)
         taskRouter.GET("deploy", api.Deploy)
+        router.GET("ws", api.DeployInfo) //websocket 发布阶段监听
     }
     return
 }

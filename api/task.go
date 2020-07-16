@@ -152,3 +152,7 @@ func SaveTask(c *gin.Context) {
     }
     utils.OkWithMessage("保存成功", c)
 }
+
+func DeployInfo(c *gin.Context) {
+    service.WebSocketHandler(c.Writer, c.Request)
+}
