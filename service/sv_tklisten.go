@@ -1,11 +1,13 @@
 package service
 
 import (
+    "deploy/model"
     "deploy/router/middleware"
     "encoding/json"
     "fmt"
     "github.com/gorilla/websocket"
     "net/http"
+    "sync"
     "time"
 )
 
@@ -28,8 +30,10 @@ type WsRespData struct {
 }
 
 type TaskProcessReport struct {
-    TaskId  int
-    Process int
+    Task    model.DeployTask
+    Server  model.Server
+    Process string
+    Result  string
 }
 
 var (
@@ -42,7 +46,21 @@ var (
         WriteBufferSize: 1024,
     }
     ProcessListenChan = make(chan *TaskProcessReport)
+    deployResults     = make(map[int]map[string]interface{})
+
+    //任务阶段
+    TaskProcessPack           = "pack"
+    TaskProcessUploadToJumper = "upload_jumper"
+    TaskProcessUploadDst      = "update_dst"
+    TaskProcessDeploy         = "deploy"
+    TaskProcessChangeWorkDir  = "change_dir"
+    //end 任务阶段
+
+    TaskSuccess = "success"
+    TaskFail    = "fail"
 )
+
+type ServerResult map[string]map[string]string
 
 func WebSocketHandler(w http.ResponseWriter, r *http.Request) {
     var (
@@ -110,19 +128,39 @@ func getWsRespData(code int, msg string, data interface{}) (res []byte) {
     return
 }
 
-func sendMsg(report *TaskProcessReport) {
+func sendMsg(taskId int, report interface{}) {
     for _, v := range taskListens {
-        if v.TaskId == report.TaskId {
-            _ = v.Client.WriteMessage(1, getWsRespData(0, "获取", report))
+        if v.TaskId == taskId {
+            _ = v.Client.WriteMessage(1, getWsRespData(0, "auto push", report))
         }
     }
 }
 
 func SchedulerDeployInfo() {
+    var (
+        serverResult ServerResult
+        ok           bool
+        sLock        sync.Mutex
+    )
     for {
         select {
         case taskProcess := <-ProcessListenChan:
-            sendMsg(taskProcess)
+            //更新结果map
+            if taskProcess.Process == TaskProcessPack || taskProcess.Process == TaskProcessUploadToJumper {
+                deployResults[taskProcess.Task.TaskId][taskProcess.Process] = taskProcess.Result
+            } else {
+                sLock.Lock()
+                if deployResults[taskProcess.Task.TaskId]["servers"] == nil {
+                    deployResults[taskProcess.Task.TaskId]["servers"] = map[string]map[string]string{}
+                }
+                if serverResult, ok = deployResults[taskProcess.Task.TaskId]["servers"].(ServerResult); !ok {
+                    return
+                }
+                serverResult[taskProcess.Server.SshAddr][taskProcess.Process] = taskProcess.Result
+                deployResults[taskProcess.Task.TaskId]["servers"] = serverResult
+                sLock.Unlock()
+            }
+            sendMsg(taskProcess.Task.TaskId, deployResults[taskProcess.Task.TaskId])
         }
     }
 }
