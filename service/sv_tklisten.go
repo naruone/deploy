@@ -89,11 +89,11 @@ func WebSocketHandler(w http.ResponseWriter, r *http.Request) {
             myJwt := middleware.NewJWT()
             if _, err := myJwt.ParseToken(wsReqData.Data); err != nil {
                 removeClient(conn)
-                _ = conn.WriteMessage(msgType, getWsRespData(999, "token error", nil))
+                _ = conn.WriteMessage(msgType, getWsRespData(999, "token-error", nil))
                 _ = conn.Close()
                 return
             }
-            _ = conn.WriteMessage(msgType, getWsRespData(0, "auth success", nil))
+            _ = conn.WriteMessage(msgType, getWsRespData(0, "auth-success", nil))
             taskListens = append(taskListens, &TaskListen{
                 TaskId: wsReqData.TaskId,
                 Client: conn,
@@ -131,9 +131,10 @@ func getWsRespData(code int, msg string, data interface{}) (res []byte) {
 }
 
 func sendMsg(taskId int, report interface{}) {
+    time.Sleep(2 * time.Second) //测试进度条
     for _, v := range taskListens {
         if v.TaskId == taskId {
-            _ = v.Client.WriteMessage(1, getWsRespData(0, "auto push", report))
+            _ = v.Client.WriteMessage(1, getWsRespData(0, "auto-push", report))
         }
     }
 }
@@ -142,6 +143,7 @@ func CloseWsConnectByTaskId(taskId int) {
     var _taskListens []*TaskListen
     for _, v := range taskListens {
         if v.TaskId == taskId {
+            _ = v.Client.WriteMessage(1, getWsRespData(0, "auto-close", nil))
             _ = v.Client.Close()
         } else {
             _taskListens = append(_taskListens, v)

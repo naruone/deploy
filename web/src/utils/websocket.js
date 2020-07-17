@@ -1,65 +1,50 @@
-let webSocket = null
+import {store} from "../store/index";
 
-function initWebSocket() {
-    webSocket = new WebSocket('ws://127.0.0.1')
-    webSocket.onmessage = function (e) {
-        websocketonmessage(e)
-    }
-    webSocket.onclose = function (e) {
-        websocketclose(e)
-    }
-    webSocket.onopen = function () {
-        websocketOpen()
-    }
+let ws = null
+let timer = null
 
-    // 连接发生错误的回调方法
-    webSocket.onerror = function () {
-        console.log('WebSocket连接发生错误')
+export const InitWebSocket = (taskId, callback) => {
+    ws = new WebSocket("ws://127.0.0.1:8085/ws")
+    ws.onmessage = function (e) {
+        let _data = JSON.parse(e.data)
+        if (_data.Status !== 0) {
+            console.log("ws connect error: ", e.data);
+            return
+        }
+        switch (_data.Message) {
+            case 'auth-success':
+                timer = setInterval(() => {
+                    SendMsg({type: "keep-alive"})
+                }, 5000);
+                break;
+            case 'auto-push':
+                if (typeof callback === "function") {
+                    callback(_data)
+                }
+                break;
+        }
+    }
+    ws.onclose = function (e) {
+        console.log('close ws from server');
+        clearInterval(timer)
+    }
+    ws.onopen = function () {
+        const token = store.getters['user/token']
+        ws.send(JSON.stringify({
+            type: "authentication",
+            taskId: taskId,
+            data: token
+        }))
+    }
+    ws.onerror = function () {
+        console.log('ws connect error')
     }
 }
 
-// 实际调用的方法
-function sendSock(agentData, callback) {
-    globalCallback = callback
-    if (websock.readyState === websock.OPEN) {
-        // 若是ws开启状态
-        websocketsend(agentData)
-    } else if (websock.readyState === websock.CONNECTING) {
-        // 若是 正在开启状态，则等待1s后重新调用
-        setTimeout(function () {
-            sendSock(agentData, callback)
-        }, 1000)
+export const SendMsg = (data) => {
+    if (ws.readyState === ws.OPEN) {
+        ws.send(JSON.stringify(data))
     } else {
-        // 若未开启 ，则等待1s后重新调用
-        setTimeout(function () {
-            sendSock(agentData, callback)
-        }, 1000)
+        console.log("send msg fail")
     }
-}
-
-// 数据接收
-function websocketonmessage(e) {
-    globalCallback(JSON.parse(e.data))
-}
-
-// 数据发送
-function websocketsend(agentData) {
-    websock.send(JSON.stringify(agentData))
-}
-
-// 关闭
-function websocketclose(e) {
-    console.log('connection closed (' + e.code + ')')
-}
-
-// 创建 websocket 连接
-function websocketOpen(e) {
-    console.log('连接成功')
-}
-
-initWebSocket()
-
-// 将方法暴露出去
-export {
-    sendSock
 }

@@ -129,7 +129,8 @@
     import tableInfo from "../../plugins/mixins/tableInfo";
     import TaskEdit from "./cpns/TaskEdit";
     import TaskInfo from "./cpns/TaskInfo";
-    import {getTaskList, deleteTask, deployTask} from "../../api/task";
+    import {deleteTask, deployTask, getTaskList} from "../../api/task";
+    import {InitWebSocket} from "../../utils/websocket";
 
     export default {
         name: "TaskList",
@@ -171,6 +172,9 @@
                             type: 'success',
                             message: res.msg
                         })
+                        InitWebSocket(row.task_id, (d) => {
+                            this.UpdateProcessBar(d)
+                        })
                         this.getTableData()
                     }).catch(() => {
                     })
@@ -205,14 +209,14 @@
                     })
                 })
             },
-            timeDisplay(row) {
-                return "C: " + row.create_at + "\nU: " + row.update_at
-            },
             deployTypeFormatter(row) {
                 return this.dType.reduce((o, n) => {
                     return n.value === row.deploy_type ? n.label : o;
                 }, '')
             },
+            UpdateProcessBar(d) {
+                console.log(d);
+            }
         },
     }
 </script>
