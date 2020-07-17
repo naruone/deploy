@@ -4,7 +4,6 @@ import (
     "deploy/model"
     "deploy/router/middleware"
     "encoding/json"
-    "fmt"
     "github.com/gorilla/websocket"
     "net/http"
     "sync"
@@ -46,6 +45,7 @@ var (
         WriteBufferSize: 1024,
     }
     ProcessListenChan = make(chan *TaskProcessReport)
+    deployResults     = make(map[int]map[string]interface{})
 
     //任务阶段
     TaskProcessPack           = "pack"
@@ -102,7 +102,9 @@ func WebSocketHandler(w http.ResponseWriter, r *http.Request) {
         if wsReqData.Type == "keep-alive" {
             _ = conn.WriteMessage(msgType, getWsRespData(0, time.Now().String(), nil))
         }
-        fmt.Println("------------", len(taskListens))
+        if wsReqData.Type == "get-process" {
+            sendMsg(wsReqData.TaskId, deployResults[wsReqData.TaskId])
+        }
     }
 }
 
@@ -134,11 +136,9 @@ func sendMsg(taskId int, report interface{}) {
 }
 
 func SchedulerDeployInfo() {
-
     var (
-        serverResult  map[string]map[string]string
-        sLock         sync.Mutex
-        deployResults = make(map[int]map[string]interface{})
+        serverResult map[string]map[string]string
+        sLock        sync.Mutex
     )
     for {
         select {
