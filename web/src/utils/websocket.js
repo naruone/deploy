@@ -3,7 +3,7 @@ import {store} from "../store/index";
 let ws = null
 let timer = null
 
-export const InitWebSocket = (taskId, callback) => {
+export const InitWebSocket = (taskId, updateStatus, callback) => {
     ws = new WebSocket("ws://127.0.0.1:8085/ws")
     ws.onmessage = function (e) {
         let _data = JSON.parse(e.data)
@@ -29,6 +29,9 @@ export const InitWebSocket = (taskId, callback) => {
     }
     ws.onclose = function (e) {
         console.log('close ws from server');
+        if (typeof updateStatus === "function") {
+            updateStatus()
+        }
         clearInterval(timer)
     }
     ws.onopen = function () {

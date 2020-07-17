@@ -96,7 +96,10 @@
                     <el-popover v-else-if="scope.row.status === 2" placement="left"
                                 trigger="hover"
                                 width="800">
-                        <!--                        <ProcessInfo :data="taskProcess" :task="scope.row"></ProcessInfo>-->
+                        <ProcessInfo
+                            :process-data="taskProcess"
+                            :com-process="getCommonProcess(scope.row.EnvCfg.Jumper.server_id !== 0)"
+                            :task-id="scope.row.task_id" :server-process="server"></ProcessInfo>
                         <el-tag slot="reference" size="mini">{{ status[scope.row.status] }}</el-tag>
                     </el-popover>
                     <el-tag slot="reference" v-else size="mini">{{ status[scope.row.status] }}</el-tag>
@@ -127,7 +130,6 @@
             </el-pagination>
         </div>
         <TaskEdit :d-type="dType" ref="taskEditorFormDrawer"></TaskEdit>
-        <ProcessInfo v-if="tableData.length > 0" :process-data="taskProcess" :task="tableData[0]"></ProcessInfo>
     </div>
 </template>
 
@@ -164,6 +166,36 @@
                     '8': '成功',
                     '9': '失败'
                 },
+                direct: [   //直发公共
+                    {
+                        k: 'pack',
+                        v: '打包'
+                    },
+                ],
+                jumper: [   //跳发公共
+                    {
+                        k: 'pack',
+                        v: '打包'
+                    },
+                    {
+                        k: 'upload_jumper',
+                        v: '上传跳板'
+                    },
+                ],
+                server: [   //直发/跳发 非公共
+                    {
+                        k: 'upload_dst',
+                        v: '上传包'
+                    },
+                    {
+                        k: 'deploy',
+                        v: '发布'
+                    },
+                    {
+                        k: 'change_dir',
+                        v: '切目录'
+                    },
+                ],
                 taskProcess: {}
             }
         },
@@ -180,7 +212,9 @@
                             type: 'success',
                             message: res.msg
                         })
-                        InitWebSocket(row.task_id, (d) => {
+                        InitWebSocket(row.task_id, () => {
+                            this.getTableData()
+                        }, (d) => {
                             this.UpdateProcessBar(d)
                         })
                         this.getTableData()
@@ -222,8 +256,38 @@
                     return n.value === row.deploy_type ? n.label : o;
                 }, '')
             },
-            UpdateProcessBar(d) {
-                this.$set(this.taskProcess, d.taskId, d.data)
+            getCommonProcess(isJumper) {
+                if (isJumper) {
+                    return this.jumper
+                } else {
+                    return this.direct
+                }
+            },
+            UpdateProcessBar(resp) {
+                if (this.taskProcess[resp.taskId] === undefined) {
+                    this.$set(this.taskProcess, resp.taskId, {})
+                    this.$set(this.taskProcess[resp.taskId], 'com_active', 1)
+                    this.$set(this.taskProcess[resp.taskId], 'servers', {})
+                }
+                let _data = resp['data'], _comProcess = 1
+                for (let v of this.jumper) {
+                    if (_data[v.k] !== undefined) {
+                        _comProcess++
+                    }
+                }
+                this.taskProcess[resp.taskId]['com_active'] = _comProcess;
+                for (let ipa in _data['servers']) {
+                    if (this.taskProcess[resp.taskId]['servers'][ipa] === undefined) {
+                        this.$set(this.taskProcess[resp.taskId]['servers'], ipa, 0)
+                    }
+                    let _process = 0
+                    for (let _pk of this.server) {
+                        if (_data['servers'][ipa][_pk.k] !== undefined) {
+                            _process++
+                        }
+                    }
+                    this.taskProcess[resp.taskId]['servers'][ipa] = _process
+                }
             }
         },
     }
