@@ -96,7 +96,7 @@
                     <el-popover v-else-if="scope.row.status === 2" placement="left"
                                 trigger="hover"
                                 width="800">
-                        <ProcessInfo :data="taskProcess" :task="scope.row"></ProcessInfo>
+                        <!--                        <ProcessInfo :data="taskProcess" :task="scope.row"></ProcessInfo>-->
                         <el-tag slot="reference" size="mini">{{ status[scope.row.status] }}</el-tag>
                     </el-popover>
                     <el-tag slot="reference" v-else size="mini">{{ status[scope.row.status] }}</el-tag>
@@ -127,6 +127,7 @@
             </el-pagination>
         </div>
         <TaskEdit :d-type="dType" ref="taskEditorFormDrawer"></TaskEdit>
+        <ProcessInfo v-if="tableData.length > 0" :process-data="taskProcess" :task="tableData[0]"></ProcessInfo>
     </div>
 </template>
 
@@ -163,9 +164,7 @@
                     '8': '成功',
                     '9': '失败'
                 },
-                taskProcess: {
-                    a: 111
-                }
+                taskProcess: {}
             }
         },
         methods: {
@@ -224,7 +223,7 @@
                 }, '')
             },
             UpdateProcessBar(d) {
-                console.log(d);
+                this.$set(this.taskProcess, d.taskId, d.data)
             }
         },
     }

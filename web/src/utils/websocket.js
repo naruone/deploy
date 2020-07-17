@@ -19,7 +19,10 @@ export const InitWebSocket = (taskId, callback) => {
                 break;
             case 'auto-push':
                 if (typeof callback === "function") {
-                    callback(_data)
+                    callback({
+                        taskId: taskId,
+                        data: _data.Data
+                    })
                 }
                 break;
         }

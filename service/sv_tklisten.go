@@ -131,7 +131,7 @@ func getWsRespData(code int, msg string, data interface{}) (res []byte) {
 }
 
 func sendMsg(taskId int, report interface{}) {
-    time.Sleep(2 * time.Second) //测试进度条
+    //可能在发消息前, 连接被任务结果处理方法关闭(概率超低, 暂不考虑)
     for _, v := range taskListens {
         if v.TaskId == taskId {
             _ = v.Client.WriteMessage(1, getWsRespData(0, "auto-push", report))
@@ -167,12 +167,12 @@ func SchedulerDeployInfo() {
             if deployResults[taskProcess.Task.TaskId] == nil {
                 deployResults[taskProcess.Task.TaskId] = map[string]interface{}{}
             }
+            if deployResults[taskProcess.Task.TaskId]["servers"] == nil {
+                deployResults[taskProcess.Task.TaskId]["servers"] = map[string]map[string]string{}
+            }
             if taskProcess.Process == TaskProcessPack || taskProcess.Process == TaskProcessUploadToJumper {
                 deployResults[taskProcess.Task.TaskId][taskProcess.Process] = taskProcess.Result
             } else {
-                if deployResults[taskProcess.Task.TaskId]["servers"] == nil {
-                    deployResults[taskProcess.Task.TaskId]["servers"] = map[string]map[string]string{}
-                }
                 serverResult = deployResults[taskProcess.Task.TaskId]["servers"].(map[string]map[string]string)
                 if serverResult[taskProcess.Server.SshAddr] == nil {
                     serverResult[taskProcess.Server.SshAddr] = map[string]string{}
