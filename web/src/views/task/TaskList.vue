@@ -212,12 +212,12 @@
                             type: 'success',
                             message: res.msg
                         })
+                        this.getTableData()
                         InitWebSocket(row.task_id, () => {
                             this.getTableData()
                         }, (d) => {
                             this.UpdateProcessBar(d)
                         })
-                        this.getTableData()
                     }).catch(() => {
                     })
                 }).catch(() => {
