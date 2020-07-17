@@ -81,7 +81,7 @@
                 fixed="right"
                 label="状态">
                 <template slot-scope="scope">
-                    <el-popover v-if="scope.row.output!==''"
+                    <el-popover v-if="scope.row.status === 8 || scope.row.status === 9"
                                 placement="left"
                                 trigger="hover"
                                 width="800">
@@ -89,10 +89,15 @@
                         <el-tag slot="reference" v-if="scope.row.status === 9"
                                 type="danger" size="mini">{{status[scope.row.status] }}
                         </el-tag>
-                        <el-tag slot="reference" v-else-if="scope.row.status === 8"
-                                type="success" size="mini">{{ status[scope.row.status] }}
+                        <el-tag slot="reference" v-else type="success"
+                                size="mini">{{ status[scope.row.status] }}
                         </el-tag>
-                        <el-tag slot="reference" v-else size="mini">{{ status[scope.row.status] }}</el-tag>
+                    </el-popover>
+                    <el-popover v-else-if="scope.row.status === 2" placement="left"
+                                trigger="hover"
+                                width="800">
+                        <ProcessInfo :data="taskProcess" :task="scope.row"></ProcessInfo>
+                        <el-tag slot="reference" size="mini">{{ status[scope.row.status] }}</el-tag>
                     </el-popover>
                     <el-tag slot="reference" v-else size="mini">{{ status[scope.row.status] }}</el-tag>
                 </template>
@@ -129,13 +134,14 @@
     import tableInfo from "../../plugins/mixins/tableInfo";
     import TaskEdit from "./cpns/TaskEdit";
     import TaskInfo from "./cpns/TaskInfo";
+    import ProcessInfo from "./cpns/ProcessInfo"
     import {deleteTask, deployTask, getTaskList} from "../../api/task";
     import {InitWebSocket} from "../../utils/websocket";
 
     export default {
         name: "TaskList",
         mixins: [tableInfo],
-        components: {TaskEdit, TaskInfo},
+        components: {TaskEdit, TaskInfo, ProcessInfo},
         created() {
             this.getTableData()
         },
@@ -156,6 +162,9 @@
                     '2': '发布中',
                     '8': '成功',
                     '9': '失败'
+                },
+                taskProcess: {
+                    a: 111
                 }
             }
         },

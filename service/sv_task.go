@@ -351,7 +351,7 @@ func deployProcessHandle(resChan chan *model.DeployTaskResult, prepareTask *mode
         collectResource(resMap)
     }
     model.UpdateTaskStatusAndOutput(prepareTask.Task.TaskId, updateRes)
-    if len(resMap) > 0 { //删除本地打包
+    if len(resMap) > 0 { //删除本地打包 && 关闭此任务的ws监听
         utils.DeletePath(resMap[0].Params.PackagePath)
         CloseWsConnectByTaskId(resMap[0].Params.Task.TaskId)
     }
@@ -364,12 +364,12 @@ func switchSymbol(resMap []*model.DeployTaskResult) {
         _oneRes    *model.DeployTaskResult
         wg         sync.WaitGroup
     )
-    _oneRes = resMap[0]                      //随便取一条结果用做判断
+    _oneRes = resMap[0] //随便取一条结果用做判断
+    wg.Add(len(resMap))
     if _oneRes.Params.Jumper.ServerId != 0 { //跳板机操作
         // 1. 连接跳板机.  2. [并发]执行目标机远程命令
         serverConn = utils.NewServerConn(_oneRes.Params.Jumper.SshAddr+":"+strconv.Itoa(_oneRes.Params.Jumper.SshPort),
             _oneRes.Params.Jumper.SshUser, _oneRes.Params.Jumper.SshKeyPath)
-        wg.Add(len(resMap))
         for _, v := range resMap {
             go func(res *model.DeployTaskResult) {
                 if _, err := serverConn.RunCmd(remoteGenCmd(res.Params.Server, res.SwitchCmd)); err != nil {
@@ -390,32 +390,34 @@ func switchSymbol(resMap []*model.DeployTaskResult) {
                 wg.Done()
             }(v)
         }
-        wg.Wait()
         serverConn.Close()
-        return
-    }
+    } else {
+        for _, r := range resMap {
+            go func(_res *model.DeployTaskResult) {
+                serverConn = utils.NewServerConn(_res.Params.Server.SshAddr+":"+strconv.Itoa(_res.Params.Server.SshPort),
+                    _res.Params.Server.SshUser, _res.Params.Server.SshKeyPath)
 
-    for _, r := range resMap {
-        serverConn = utils.NewServerConn(r.Params.Server.SshAddr+":"+strconv.Itoa(r.Params.Server.SshPort),
-            r.Params.Server.SshUser, r.Params.Server.SshKeyPath)
-
-        if _, err := serverConn.RunCmd(r.SwitchCmd); err != nil {
-            ProcessListenChan <- &TaskProcessReport{
-                Task:    r.Params.Task,
-                Server:  r.Params.Server,
-                Process: TaskProcessChangeWorkDir,
-                Result:  TaskFail,
-            }
-        } else {
-            ProcessListenChan <- &TaskProcessReport{
-                Task:    r.Params.Task,
-                Server:  r.Params.Server,
-                Process: TaskProcessChangeWorkDir,
-                Result:  TaskSuccess,
-            }
+                if _, err := serverConn.RunCmd(_res.SwitchCmd); err != nil {
+                    ProcessListenChan <- &TaskProcessReport{
+                        Task:    _res.Params.Task,
+                        Server:  _res.Params.Server,
+                        Process: TaskProcessChangeWorkDir,
+                        Result:  TaskFail,
+                    }
+                } else {
+                    ProcessListenChan <- &TaskProcessReport{
+                        Task:    _res.Params.Task,
+                        Server:  _res.Params.Server,
+                        Process: TaskProcessChangeWorkDir,
+                        Result:  TaskSuccess,
+                    }
+                }
+                serverConn.Close()
+                wg.Done()
+            }(r)
         }
-        serverConn.Close()
     }
+    wg.Wait()
 }
 
 //回收资源

@@ -47,8 +47,4 @@
     .task-info pre {
         font-size: 0.8em;
     }
-
-    .task-info .el-divider {
-        /*margin: 15px;*/
-    }
 </style>
