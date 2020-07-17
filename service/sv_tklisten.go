@@ -46,12 +46,11 @@ var (
         WriteBufferSize: 1024,
     }
     ProcessListenChan = make(chan *TaskProcessReport)
-    deployResults     = make(map[int]map[string]interface{})
 
     //任务阶段
     TaskProcessPack           = "pack"
     TaskProcessUploadToJumper = "upload_jumper"
-    TaskProcessUploadDst      = "update_dst"
+    TaskProcessUploadDst      = "upload_dst"
     TaskProcessDeploy         = "deploy"
     TaskProcessChangeWorkDir  = "change_dir"
     //end 任务阶段
@@ -59,8 +58,6 @@ var (
     TaskSuccess = "success"
     TaskFail    = "fail"
 )
-
-type ServerResult map[string]map[string]string
 
 func WebSocketHandler(w http.ResponseWriter, r *http.Request) {
     var (
@@ -137,29 +134,33 @@ func sendMsg(taskId int, report interface{}) {
 }
 
 func SchedulerDeployInfo() {
+
     var (
-        serverResult ServerResult
-        ok           bool
-        sLock        sync.Mutex
+        serverResult  map[string]map[string]string
+        sLock         sync.Mutex
+        deployResults = make(map[int]map[string]interface{})
     )
     for {
         select {
         case taskProcess := <-ProcessListenChan:
-            //更新结果map
+            sLock.Lock()
+            if deployResults[taskProcess.Task.TaskId] == nil {
+                deployResults[taskProcess.Task.TaskId] = map[string]interface{}{}
+            }
             if taskProcess.Process == TaskProcessPack || taskProcess.Process == TaskProcessUploadToJumper {
                 deployResults[taskProcess.Task.TaskId][taskProcess.Process] = taskProcess.Result
             } else {
-                sLock.Lock()
                 if deployResults[taskProcess.Task.TaskId]["servers"] == nil {
                     deployResults[taskProcess.Task.TaskId]["servers"] = map[string]map[string]string{}
                 }
-                if serverResult, ok = deployResults[taskProcess.Task.TaskId]["servers"].(ServerResult); !ok {
-                    return
+                serverResult = deployResults[taskProcess.Task.TaskId]["servers"].(map[string]map[string]string)
+                if serverResult[taskProcess.Server.SshAddr] == nil {
+                    serverResult[taskProcess.Server.SshAddr] = map[string]string{}
                 }
                 serverResult[taskProcess.Server.SshAddr][taskProcess.Process] = taskProcess.Result
                 deployResults[taskProcess.Task.TaskId]["servers"] = serverResult
-                sLock.Unlock()
             }
+            sLock.Unlock()
             sendMsg(taskProcess.Task.TaskId, deployResults[taskProcess.Task.TaskId])
         }
     }
