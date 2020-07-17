@@ -150,7 +150,6 @@
             async loadBranch(envId) {
                 this.taskForm.branch = ''
                 this.taskForm.version = ''
-                console.log(this.taskForm);
                 let envObj = this.envOptions.reduce((o, n) => {
                     return n.value === envId ? n.info : o
                 }, '')

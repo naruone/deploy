@@ -12,6 +12,7 @@ import (
     "strconv"
     "strings"
     "sync"
+    "time"
 )
 
 func DeployTaskList(search *request.ComPageInfo) ([]model.DeployTask, int, error) {
@@ -109,6 +110,7 @@ func deployScheduleStart(prepareTask *model.TaskPrepare) {
         }
         return
     }
+    time.Sleep(2 * time.Second)
     ProcessListenChan <- &TaskProcessReport{
         Task:    prepareTask.Task,
         Process: TaskProcessPack,
@@ -151,6 +153,7 @@ func deployStartDirect(params model.DeployTaskRunParams) {
         }
         return
     }
+    time.Sleep(2 * time.Second)
     ProcessListenChan <- &TaskProcessReport{
         Task:    params.Task,
         Server:  params.Server,
@@ -176,7 +179,7 @@ func deployStartDirect(params model.DeployTaskRunParams) {
         }
         return
     }
-
+    time.Sleep(2 * time.Second)
     params.ResChan <- &model.DeployTaskResult{
         Params:    params,
         ResStatus: model.TaskRunSuccess,
@@ -218,6 +221,7 @@ func deployStartByJumper(params model.DeployTaskRunParams, prepareTask *model.Ta
         }
         return
     }
+    time.Sleep(2 * time.Second)
     ProcessListenChan <- &TaskProcessReport{
         Task:    params.Task,
         Process: TaskProcessUploadToJumper,
@@ -262,6 +266,7 @@ func deployStartByJumper(params model.DeployTaskRunParams, prepareTask *model.Ta
                 wg.Done()
                 return
             }
+            time.Sleep(2 * time.Second)
             ProcessListenChan <- &TaskProcessReport{
                 Task:    params.Task,
                 Server:  params.Server,
@@ -291,6 +296,7 @@ func deployStartByJumper(params model.DeployTaskRunParams, prepareTask *model.Ta
                 wg.Done()
                 return
             }
+            time.Sleep(2 * time.Second)
             params.ResChan <- &model.DeployTaskResult{
                 Params:    p,
                 ResStatus: model.TaskRunSuccess,
@@ -372,6 +378,7 @@ func switchSymbol(resMap []*model.DeployTaskResult) {
             _oneRes.Params.Jumper.SshUser, _oneRes.Params.Jumper.SshKeyPath)
         for _, v := range resMap {
             go func(res *model.DeployTaskResult) {
+                time.Sleep(2 * time.Second)
                 if _, err := serverConn.RunCmd(remoteGenCmd(res.Params.Server, res.SwitchCmd)); err != nil {
                     ProcessListenChan <- &TaskProcessReport{
                         Task:    res.Params.Task,
@@ -396,7 +403,7 @@ func switchSymbol(resMap []*model.DeployTaskResult) {
             go func(_res *model.DeployTaskResult) {
                 serverConn = utils.NewServerConn(_res.Params.Server.SshAddr+":"+strconv.Itoa(_res.Params.Server.SshPort),
                     _res.Params.Server.SshUser, _res.Params.Server.SshKeyPath)
-
+                time.Sleep(2 * time.Second)
                 if _, err := serverConn.RunCmd(_res.SwitchCmd); err != nil {
                     ProcessListenChan <- &TaskProcessReport{
                         Task:    _res.Params.Task,

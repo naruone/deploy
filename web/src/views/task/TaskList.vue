@@ -98,7 +98,7 @@
                                 width="800">
                         <ProcessInfo
                             :process-data="taskProcess"
-                            :com-process="getCommonProcess(scope.row.EnvCfg.Jumper.server_id !== 0)"
+                            :com-process="getCommonProcess(scope.row)"
                             :task-id="scope.row.task_id" :server-process="server"></ProcessInfo>
                         <el-tag slot="reference" size="mini">{{ status[scope.row.status] }}</el-tag>
                     </el-popover>
@@ -256,8 +256,8 @@
                     return n.value === row.deploy_type ? n.label : o;
                 }, '')
             },
-            getCommonProcess(isJumper) {
-                if (isJumper) {
+            getCommonProcess(row) {
+                if (row.EnvCfg.Jumper.server_id !== 0) {
                     return this.jumper
                 } else {
                     return this.direct
