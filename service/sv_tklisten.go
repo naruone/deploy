@@ -110,12 +110,15 @@ func WebSocketHandler(w http.ResponseWriter, r *http.Request) {
 
 //删除关闭的连接
 func removeClient(conn *websocket.Conn) {
-    for idx, v := range taskListens {
+    var _taskListens []*TaskListen
+    for _, v := range taskListens {
         if v.Client == conn {
             _ = conn.Close()
-            taskListens = append(taskListens[:idx], taskListens[idx+1:]...)
+        } else {
+            _taskListens = append(_taskListens, v)
         }
     }
+    taskListens = _taskListens
 }
 
 func getWsRespData(code int, msg string, data interface{}) (res []byte) {
@@ -132,6 +135,21 @@ func sendMsg(taskId int, report interface{}) {
         if v.TaskId == taskId {
             _ = v.Client.WriteMessage(1, getWsRespData(0, "auto push", report))
         }
+    }
+}
+
+func CloseWsConnectByTaskId(taskId int) {
+    var _taskListens []*TaskListen
+    for _, v := range taskListens {
+        if v.TaskId == taskId {
+            _ = v.Client.Close()
+        } else {
+            _taskListens = append(_taskListens, v)
+        }
+    }
+    taskListens = _taskListens
+    if deployResults[taskId] != nil {
+        delete(deployResults, taskId)
     }
 }
 

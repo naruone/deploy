@@ -350,10 +350,11 @@ func deployProcessHandle(resChan chan *model.DeployTaskResult, prepareTask *mode
     } else {
         collectResource(resMap)
     }
+    model.UpdateTaskStatusAndOutput(prepareTask.Task.TaskId, updateRes)
     if len(resMap) > 0 { //删除本地打包
         utils.DeletePath(resMap[0].Params.PackagePath)
+        CloseWsConnectByTaskId(resMap[0].Params.Task.TaskId)
     }
-    model.UpdateTaskStatusAndOutput(prepareTask.Task.TaskId, updateRes)
 }
 
 //切换工作目录
