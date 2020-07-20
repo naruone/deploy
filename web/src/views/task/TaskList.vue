@@ -264,7 +264,7 @@
                 this.taskConnected.push(task_id)
                 InitWebSocket(task_id, () => {
                     this.getTableData()
-                    Vue.delete(this.taskProcess, task_id)
+                    this.$delete(this.taskProcess, task_id)
                     if (this.taskConnected.indexOf(t.task_id) !== -1) {
                         this.taskConnected.splice(this.taskConnected.indexOf(t.task_id), 1)
                     }
