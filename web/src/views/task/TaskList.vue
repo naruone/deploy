@@ -214,7 +214,6 @@
                             message: res.msg
                         })
                         this.getTableData()
-                        this.connectWs(row.task_id)
                     }).catch(() => {
                     })
                 }).catch(() => {
@@ -265,8 +264,8 @@
                 InitWebSocket(task_id, () => {
                     this.getTableData()
                     this.$delete(this.taskProcess, task_id)
-                    if (this.taskConnected.indexOf(t.task_id) !== -1) {
-                        this.taskConnected.splice(this.taskConnected.indexOf(t.task_id), 1)
+                    if (this.taskConnected.indexOf(task_id) !== -1) {
+                        this.taskConnected.splice(this.taskConnected.indexOf(task_id), 1)
                     }
                 }, (d) => {
                     this.UpdateProcessBar(d)
