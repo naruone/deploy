@@ -28,6 +28,9 @@ export default {
             this.total = table.data.total
             this.currentPage = table.data.currentPage
             this.pageSize = table.data.pageSize
+            if (typeof this.afterUpdateList === "function") {
+                this.afterUpdateList()
+            }
         }
     }
 }

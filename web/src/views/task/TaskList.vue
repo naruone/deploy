@@ -3,7 +3,7 @@
         <el-form ref="searchForm" :model="searchForm" :inline="true">
             <el-form-item label="筛选条件" prop="condition">
                 <el-select style="width: 120px" v-model="searchForm.sCondition" placeholder="请选择">
-                    <el-option key="env_name" label="名称" value="env_name"/>
+                    <el-option key="task_name" label="任务名称" value="env_name"/>
                 </el-select>
             </el-form-item>
             <el-form-item prop="searchValue">
@@ -196,7 +196,8 @@
                         v: '切目录'
                     },
                 ],
-                taskProcess: {}
+                taskProcess: {},
+                taskConnected: []
             }
         },
         methods: {
@@ -213,11 +214,7 @@
                             message: res.msg
                         })
                         this.getTableData()
-                        InitWebSocket(row.task_id, () => {
-                            this.getTableData()
-                        }, (d) => {
-                            this.UpdateProcessBar(d)
-                        })
+                        this.connectWs(row.task_id)
                     }).catch(() => {
                     })
                 }).catch(() => {
@@ -263,6 +260,18 @@
                     return this.direct
                 }
             },
+            connectWs(task_id) {
+                this.taskConnected.push(task_id)
+                InitWebSocket(task_id, () => {
+                    this.getTableData()
+                    Vue.delete(this.taskProcess, task_id)
+                    if (this.taskConnected.indexOf(t.task_id) !== -1) {
+                        this.taskConnected.splice(this.taskConnected.indexOf(t.task_id), 1)
+                    }
+                }, (d) => {
+                    this.UpdateProcessBar(d)
+                })
+            },
             UpdateProcessBar(resp) {
                 if (this.taskProcess[resp.taskId] === undefined) {
                     this.$set(this.taskProcess, resp.taskId, {})
@@ -288,6 +297,13 @@
                     }
                     this.taskProcess[resp.taskId]['servers'][ipa] = _process
                 }
+            },
+            afterUpdateList() {
+                this.tableData.map((t) => {
+                    if (t.status === 2 && this.taskConnected.indexOf(t.task_id) === -1) {
+                        this.connectWs(t.task_id)
+                    }
+                })
             }
         },
     }
