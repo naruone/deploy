@@ -6,7 +6,6 @@ import (
     "encoding/json"
     "github.com/gorilla/websocket"
     "net/http"
-    "sync"
     "time"
 )
 
@@ -156,14 +155,10 @@ func CloseWsConnectByTaskId(taskId int) {
 }
 
 func SchedulerDeployInfo() {
-    var (
-        serverResult map[string]map[string]string
-        sLock        sync.Mutex
-    )
+    var serverResult map[string]map[string]string
     for {
         select {
         case taskProcess := <-ProcessListenChan:
-            sLock.Lock()
             if deployResults[taskProcess.Task.TaskId] == nil {
                 deployResults[taskProcess.Task.TaskId] = map[string]interface{}{}
             }
@@ -180,7 +175,6 @@ func SchedulerDeployInfo() {
                 serverResult[taskProcess.Server.SshAddr][taskProcess.Process] = taskProcess.Result
                 deployResults[taskProcess.Task.TaskId]["servers"] = serverResult
             }
-            sLock.Unlock()
             sendMsg(taskProcess.Task.TaskId, deployResults[taskProcess.Task.TaskId])
         }
     }

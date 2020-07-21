@@ -48,8 +48,8 @@ func StructToMap(obj interface{}) map[string]interface{} {
 }
 
 func RunCmd(dir, cmdName string, args ...string) (out string, errOut string, err error) {
-    bufOut := new(bytes.Buffer)
-    bufErr := new(bytes.Buffer)
+    bufOut := &bytes.Buffer{}
+    bufErr := &bytes.Buffer{}
 
     cmd := exec.Command(cmdName, args...)
     cmd.Dir = dir
