@@ -92,6 +92,12 @@ func WebSocketHandler(w http.ResponseWriter, r *http.Request) {
                 _ = conn.Close()
                 return
             }
+            if (model.GetTaskById(wsReqData.TaskId)).Status == model.TaskRunFail {
+                removeClient(conn)
+                _ = conn.WriteMessage(msgType, getWsRespData(999, "task fail", nil))
+                _ = conn.Close()
+                return
+            }
             _ = conn.WriteMessage(msgType, getWsRespData(0, "auth-success", nil))
             taskListens = append(taskListens, &TaskListen{
                 TaskId: wsReqData.TaskId,

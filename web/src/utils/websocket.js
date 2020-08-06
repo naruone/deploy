@@ -4,7 +4,7 @@ let ws = null
 let timer = null
 
 export const InitWebSocket = (taskId, updateStatus, callback) => {
-    ws = new WebSocket("ws://127.0.0.1:8085/ws")
+    ws = new WebSocket("ws://" + process.env.VUE_APP_DEPLOY_WS_URI + "/ws")
     ws.onmessage = function (e) {
         let _data = JSON.parse(e.data)
         if (_data.Status !== 0) {

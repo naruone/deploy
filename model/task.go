@@ -254,3 +254,8 @@ func PrepareTask(taskId int) (taskPrepare TaskPrepare, err error) {
     }
     return
 }
+
+func GetTaskById(taskId int) (task DeployTask) {
+    mdb.Where("task_id = ?", taskId).First(&task)
+    return
+}
