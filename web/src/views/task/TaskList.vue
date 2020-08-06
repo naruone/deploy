@@ -53,7 +53,7 @@
             <el-table-column
                 fixed
                 prop="branch"
-                width="80"
+                width="150"
                 label="分支">
             </el-table-column>
             <el-table-column
