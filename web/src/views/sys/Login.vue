@@ -53,8 +53,8 @@
         data() {
             return {
                 loginForm: {
-                    username: 'corey',
-                    password: '123456',
+                    username: '',
+                    password: '',
                     captcha: '',
                     captchaId: ''
                 },
