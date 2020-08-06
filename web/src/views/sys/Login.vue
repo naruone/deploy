@@ -49,7 +49,6 @@
     import {captcha} from '../../api/user'
     import {mapActions} from "vuex";
 
-    const path = process.env.VUE_APP_DEPLOY_BASE_API;
     export default {
         data() {
             return {
@@ -94,7 +93,8 @@
             },
             refreshCaptcha() {
                 captcha({}).then((res) => {
-                    this.picPath = path + res.data.picPath
+                    let basePath = process.env.NODE_ENV === 'development' ? process.env.VUE_APP_DEPLOY_BASE_API : ''
+                    this.picPath = basePath + res.data.picPath
                     this.loginForm.captchaId = res.data.captchaId
                 })
             },
