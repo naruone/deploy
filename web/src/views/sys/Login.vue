@@ -8,7 +8,7 @@
                 <span class="svg-container">
                     <i class="el-icon-user"></i>
                 </span>
-                <el-input style="width: 280px" tabindex="1" v-model.trim="loginForm.username"
+                <el-input ref="username" style="width: 280px" tabindex="1" v-model.trim="loginForm.username"
                           placeholder="请输入用户名"></el-input>
             </el-form-item>
             <el-tooltip v-model="capsTooltip" content="大写已开启" placement="right" manual>
@@ -81,8 +81,6 @@
         mounted() {
             if (this.loginForm.username === '') {
                 this.$refs.username.focus()
-            } else if (this.loginForm.password === '') {
-                this.$refs.password.focus()
             }
         },
         methods: {
