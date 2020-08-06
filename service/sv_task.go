@@ -58,6 +58,7 @@ func Deploy(taskId int) (err error) {
         err = errors.New("状态错误,只有未开始的任务才能做发布操作")
         return
     }
+    model.UpdateTaskStatusAndOutput(prepareTask.Task.TaskId, map[string]interface{}{"status": model.TaskStarting})
     go deployScheduleStart(&prepareTask)
     return
 }
@@ -69,9 +70,6 @@ func deployScheduleStart(prepareTask *model.TaskPrepare) {
         delFiles []string //要删除的文件
         err      error
     )
-    model.UpdateTaskStatusAndOutput(prepareTask.Task.TaskId, map[string]interface{}{
-        "status": model.TaskStarting,
-    })
     params = model.DeployTaskRunParams{
         Jumper:      prepareTask.Jumper,
         Task:        prepareTask.Task,
