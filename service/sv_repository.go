@@ -117,7 +117,7 @@ func (repo *Repository) Package(startVer, endVer, name string) (filename string,
         cmd = "git archive --format=tar.gz " + endVer + " $(git diff --name-status -b " + startVer + " " +
             endVer + "|grep -v ^D |awk '{print $2}') -o " + filename
         _delFile, _, err = utils.RunCmd(repo.Path, "/bin/bash", "-c", "git diff --name-status -b "+startVer+
-            " "+endVer+"|grep ^D |awk '{print $2}'")
+            " "+endVer+" | grep ^D | awk -F'\t' '{print $2}'")
         var _dFiles []string
         _delFile = strings.TrimSpace(_delFile)
         if _delFile != "" {
@@ -128,7 +128,7 @@ func (repo *Repository) Package(startVer, endVer, name string) (filename string,
         delFiles = _dFiles
     }
     if _, errOutput, err = utils.RunCmd(repo.Path, "/bin/bash", "-c", cmd); err != nil {
-        err = errors.New(err.Error() + "\n Output: " + errOutput)
+        err = errors.New(err.Error() + "\n Output: " + errOutput + "\n Cmd: " + cmd)
     }
     return
 }
