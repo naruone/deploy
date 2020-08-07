@@ -115,7 +115,7 @@ func (repo *Repository) Package(startVer, endVer, name string) (filename string,
         cmd = "git archive --format=tar.gz " + endVer + " -o " + filename
     } else {
         cmd = "git archive --format=tar.gz " + endVer + " $(git diff --name-status -b " + startVer + " " +
-            endVer + "|grep -v ^D |awk '{print $2}') -o " + filename
+            endVer + "|grep -v ^D | awk -F'\t' '{print $2}') -o " + filename
         _delFile, _, err = utils.RunCmd(repo.Path, "/bin/bash", "-c", "git diff --name-status -b "+startVer+
             " "+endVer+" | grep ^D | awk -F'\t' '{print $2}'")
         var _dFiles []string
