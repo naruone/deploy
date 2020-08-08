@@ -85,7 +85,7 @@
                                 placement="left"
                                 trigger="hover"
                                 width="800">
-                        <TaskInfo :data="scope.row.output"></TaskInfo>
+                        <TaskInfo :data="scope.row.output" :status="status"></TaskInfo>
                         <el-tag slot="reference" v-if="scope.row.status === 9"
                                 type="danger" size="mini">{{status[scope.row.status] }}
                         </el-tag>

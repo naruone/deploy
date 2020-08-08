@@ -7,7 +7,7 @@
                 <div style="width: 100%;overflow: scroll;">
                     <pre>{{v.message}}</pre>
                 </div>
-                <span>状态:</span> {{v.status}}
+                <span>状态:</span> {{status[v.status]}}
             </div>
         </div>
     </div>
@@ -17,7 +17,8 @@
     export default {
         name: "TaskInfo",
         props: {
-            data: String
+            data: String,
+            status: Array
         },
         computed: {
             dataRes() {
@@ -36,6 +37,7 @@
         border: 1px solid #EEE;
         margin-bottom: 5px;
         border-radius: 3px;
+        font-size: 0.8em;
     }
 
     .task-info span {
