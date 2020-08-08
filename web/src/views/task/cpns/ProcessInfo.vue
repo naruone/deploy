@@ -2,16 +2,20 @@
     <div class="process-info">
         <div class="process-info-common">
             <el-divider content-position="left">公共</el-divider>
-            <el-steps :space="100" :active="this.processData[this.taskId] ? this.processData[this.taskId]['com_active'] : 0"
+            <el-steps :space="100" finish-status="success"
+                      :process-status="this.processData[this.taskId]['now_status']"
+                      :active="this.processData[this.taskId]['now_step']"
                       align-center>
                 <el-step title="开始"></el-step>
                 <el-step v-for="v in comProcess" :title="v.v"></el-step>
             </el-steps>
         </div>
-        <div class="process-info-server" v-if="processData[taskId]">
+        <div class="process-info-server">
             <div v-for="(_act,k) in processData[taskId]['servers']">
                 <el-divider content-position="left">{{k}}</el-divider>
-                <el-steps :space="100" :active="_act" align-center>
+                <el-steps :space="100" finish-status="success"
+                          :process-status="_act['now_status']"
+                          :active="_act['now_step']" align-center>
                     <el-step v-for="v in serverProcess" :title="v.v"></el-step>
                 </el-steps>
             </div>

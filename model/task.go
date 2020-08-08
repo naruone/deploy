@@ -201,6 +201,9 @@ func GetDeployTaskList(search *request.ComPageInfo) (taskList []DeployTask, tota
     }
     for idx, tl := range taskList {
         mdb.Where("env_id = ?", tl.EnvId).First(&taskList[idx].EnvCfg)
+        if tl.Status == TaskStarting {
+            mdb.Where("find_in_set(server_id, ?)", taskList[idx].EnvCfg.ServerIds).Find(&taskList[idx].EnvCfg.Servers)
+        }
         if taskList[idx].EnvCfg.JumpServer != 0 {
             mdb.Where("server_id = ?", taskList[idx].EnvCfg.JumpServer).First(&taskList[idx].EnvCfg.Jumper)
         }

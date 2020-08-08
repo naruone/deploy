@@ -18,7 +18,7 @@
         name: "TaskInfo",
         props: {
             data: String,
-            status: Array
+            status: Object
         },
         computed: {
             dataRes() {

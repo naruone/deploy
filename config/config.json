@@ -18,6 +18,7 @@
         "width": 75,
         "height": 35
     },
+    "ssh_connect_timeout": 30,
     "repo": "/tmp/_repo",
     "repo_package": "/tmp/_repo/_package",
     "srv_work_dir": "/opt/_repo"

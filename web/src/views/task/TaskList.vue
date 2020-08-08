@@ -130,6 +130,12 @@
             </el-pagination>
         </div>
         <TaskEdit :d-type="dType" ref="taskEditorFormDrawer"></TaskEdit>
+
+        <el-steps :active="1" finish-status="success" process-status="process">
+            <el-step title="步骤 1"></el-step>
+            <el-step title="步骤 2"></el-step>
+            <el-step title="步骤 3"></el-step>
+        </el-steps>
     </div>
 </template>
 
@@ -213,13 +219,6 @@
                             type: 'success',
                             message: res.msg
                         })
-                        /* 响应式增加 */
-                        this.$set(this.taskProcess, row.task_id, {})
-                        this.$set(this.taskProcess[row.task_id], 'com_active', 1)
-                        this.$set(this.taskProcess[row.task_id], 'servers', {})
-                        for (let ip of res.data) {
-                            this.$set(this.taskProcess[row.task_id]['servers'], ip, 0)
-                        }
                         this.getTableData()
                     }).catch(() => {
                     })
@@ -279,26 +278,49 @@
                 })
             },
             UpdateProcessBar(resp) {
-                let _data = resp['data'], _comProcess = 1
+                let _data = resp['data'], _comProcess = 1, _pStatus = 'success'
                 for (let v of this.jumper) {
                     if (_data[v.k] !== undefined) {
-                        _comProcess++
-                    }
-                }
-                this.taskProcess[resp.taskId]['com_active'] = _comProcess;
-                for (let ip in _data['servers']) {
-                    let _process = 0
-                    for (let _pk of this.server) {
-                        if (_data['servers'][ip][_pk.k] !== undefined) {
-                            _process++
+                        if (_data[v.k] === 'success') {
+                            _comProcess++
+                        } else {
+                            _pStatus = 'error'
                         }
                     }
-                    this.taskProcess[resp.taskId]['servers'][ip] = _process
+                }
+                this.taskProcess[resp.taskId]['now_step'] = _comProcess;
+                this.taskProcess[resp.taskId]['now_status'] = _pStatus;
+                for (let ip in _data['servers']) {
+                    let _process = 0, _sStatus = 'success'
+                    for (let _pk of this.server) {
+                        if (_data['servers'][ip][_pk.k] !== undefined) {
+                            if (_data['servers'][ip][_pk.k] === 'success') {
+                                _sStatus = 'process'
+                                _process++
+                            } else {
+                                _sStatus = 'error'
+                            }
+                        }
+                    }
+                    this.taskProcess[resp.taskId]['servers'][ip] = {
+                        now_step: _process,
+                        now_status: _sStatus
+                    }
                 }
             },
             afterUpdateList() {
                 this.tableData.map((t) => {
                     if (t.status === 2 && this.taskConnected.indexOf(t.task_id) === -1) {
+                        this.$set(this.taskProcess, t.task_id, {})
+                        this.$set(this.taskProcess[t.task_id], 'now_step', 1)
+                        this.$set(this.taskProcess[t.task_id], 'now_status', 'process')
+                        this.$set(this.taskProcess[t.task_id], 'servers', {})
+                        for (let srv of t['EnvCfg']['Servers']) {
+                            this.$set(this.taskProcess[t.task_id]['servers'], srv['ssh_addr'], {
+                                now_step: 0,
+                                now_status: 'wait'
+                            })
+                        }
                         this.connectWs(t.task_id)
                     }
                 })

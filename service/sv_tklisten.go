@@ -92,9 +92,9 @@ func WebSocketHandler(w http.ResponseWriter, r *http.Request) {
                 _ = conn.Close()
                 return
             }
-            if (model.GetTaskById(wsReqData.TaskId)).Status == model.TaskRunFail {
+            if (model.GetTaskById(wsReqData.TaskId)).Status != model.TaskStarting {
                 removeClient(conn)
-                _ = conn.WriteMessage(msgType, getWsRespData(999, "task fail", nil))
+                _ = conn.WriteMessage(msgType, getWsRespData(999, "task not processing", nil))
                 _ = conn.Close()
                 return
             }
@@ -103,11 +103,15 @@ func WebSocketHandler(w http.ResponseWriter, r *http.Request) {
                 TaskId: wsReqData.TaskId,
                 Client: conn,
             })
+            if deployResults[wsReqData.TaskId] != nil {
+                //连接成功时如果有消息则发送一次
+                sendMsg(wsReqData.TaskId, deployResults[wsReqData.TaskId]) //连接成功时发一次
+            }
         }
         if wsReqData.Type == "keep-alive" {
             _ = conn.WriteMessage(msgType, getWsRespData(0, time.Now().String(), nil))
         }
-        if wsReqData.Type == "get-process" {
+        if wsReqData.Type == "get-process" { //目前没用到, 连接时会主动推送(暂时没有场景)
             sendMsg(wsReqData.TaskId, deployResults[wsReqData.TaskId])
         }
     }
@@ -136,7 +140,6 @@ func getWsRespData(code int, msg string, data interface{}) (res []byte) {
 }
 
 func sendMsg(taskId int, report interface{}) {
-    //可能在发消息前, 连接被任务结果处理方法关闭(概率超低, 暂不考虑)
     for _, v := range taskListens {
         if v.TaskId == taskId {
             _ = v.Client.WriteMessage(1, getWsRespData(0, "auto-push", report))

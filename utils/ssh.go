@@ -2,6 +2,7 @@ package utils
 
 import (
     "bytes"
+    dCfg "deploy/config"
     "fmt"
     "github.com/pkg/sftp"
     "golang.org/x/crypto/ssh"
@@ -10,6 +11,7 @@ import (
     "net"
     "os"
     "path"
+    "time"
 )
 
 type ServerConn struct {
@@ -46,6 +48,7 @@ func (s *ServerConn) getSshConnect() (sshClient *ssh.Client, err error) {
         HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
             return nil
         },
+        Timeout: time.Duration(dCfg.GConfig.SshConnectTimeout) * time.Second, //连接超时时间
     }
     if buffer, err = ioutil.ReadFile(s.privateKeyPath); err != nil {
         err = fmt.Errorf("IP: %s 读取私钥失败: %v", s.addr, err)

@@ -13,16 +13,17 @@ var (
 )
 
 type SysConfig struct {
-    Env           string    `json:"env"`
-    Port          int       `json:"port"`
-    ViewPath      string    `json:"view_path"`
-    StaticDir     string    `json:"static_dir"`
-    DbConfig      *DbConfig `json:"db"`
-    JwtSigningKey string    `json:"jwt-signing-key"`
-    Captcha       *Captcha  `json:"captcha"`
-    Repo          string    `json:"repo"`
-    RepoPackage   string    `json:"repo_package"`
-    ServerWorkDir string    `json:"srv_work_dir"`
+    Env               string    `json:"env"`
+    Port              int       `json:"port"`
+    ViewPath          string    `json:"view_path"`
+    StaticDir         string    `json:"static_dir"`
+    DbConfig          *DbConfig `json:"db"`
+    JwtSigningKey     string    `json:"jwt-signing-key"`
+    Captcha           *Captcha  `json:"captcha"`
+    SshConnectTimeout int       `json:"ssh_connect_timeout"`
+    Repo              string    `json:"repo"`
+    RepoPackage       string    `json:"repo_package"`
+    ServerWorkDir     string    `json:"srv_work_dir"`
 }
 
 type DbConfig struct {
