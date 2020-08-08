@@ -267,8 +267,8 @@
             },
             connectWs(task_id) {
                 this.taskConnected.push(task_id)
-                InitWebSocket(task_id, () => {
-                    this.getTableData()
+                InitWebSocket(task_id, async () => {
+                    await this.getTableData()
                     this.$delete(this.taskProcess, task_id)
                     if (this.taskConnected.indexOf(task_id) !== -1) {
                         this.taskConnected.splice(this.taskConnected.indexOf(task_id), 1)
