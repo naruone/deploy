@@ -150,6 +150,21 @@ func SaveTask(c *gin.Context) {
     utils.OkWithMessage("保存成功", c)
 }
 
+func RollBack(c *gin.Context) {
+    var (
+        taskId int
+        err    error
+    )
+    if taskId, err = strconv.Atoi(c.Query("task_id")); err != nil {
+        utils.FailWithMessage(err.Error(), c)
+        return
+    }
+    taskId = taskId
+    // todo 待完善
+
+    utils.OkWithData(nil, c)
+}
+
 func DeployInfo(c *gin.Context) {
     service.WebSocketHandler(c.Writer, c.Request)
 }

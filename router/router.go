@@ -60,6 +60,7 @@ func InitRouters() (router *gin.Engine) {
         taskRouter.GET("getBranches", api.GetBranches)
         taskRouter.GET("getVersions", api.GetVersions)
         taskRouter.GET("getEnvOptions", api.GetEnvOptions)
+        taskRouter.GET("rollBack", api.RollBack)
         taskRouter.GET("deploy", api.Deploy)
         router.GET("ws", api.DeployInfo) //websocket 发布阶段监听
     }

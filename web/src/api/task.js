@@ -55,3 +55,11 @@ export const deployTask = (data) => {
         params: data
     })
 }
+
+export const rollBackTask = (data) => {
+    return service({
+        url: "/task/rollBack",
+        method: 'get',
+        params: data
+    })
+}

@@ -115,6 +115,11 @@
                                icon="el-icon-delete" circle
                                @click="delTask(scope.row)"
                                slot="reference"></el-button>
+                    <el-tooltip v-if="scope.row.status === 8" content="回滚" placement="top" effect="dark">
+                        <el-button type="primary"
+                                   icon="el-icon-refresh-left" circle
+                                   @click="rollBackTask(scope.row)"></el-button>
+                    </el-tooltip>
                 </template>
             </el-table-column>
         </el-table>
@@ -138,7 +143,7 @@
     import TaskEdit from "./cpns/TaskEdit";
     import TaskInfo from "./cpns/TaskInfo";
     import ProcessInfo from "./cpns/ProcessInfo"
-    import {deleteTask, deployTask, getTaskList} from "../../api/task";
+    import {deleteTask, deployTask, getTaskList, rollBackTask} from "../../api/task";
     import {InitWebSocket} from "../../utils/websocket";
 
     export default {
@@ -225,6 +230,26 @@
             },
             editTask() {
                 this.$refs.taskEditorFormDrawer.setEditVal()
+            },
+            rollBackTask(row) {
+                this.$confirm('确认回滚到该工作目录?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(async () => {
+                    await rollBackTask({task_id: row.task_id}).then((res) => {
+                        this.$message({
+                            type: 'success',
+                            message: res.msg
+                        })
+                    }).catch(() => {
+                    })
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消'
+                    })
+                })
             },
             delTask(row) {
                 this.$confirm('确认删除该任务?', '提示', {
