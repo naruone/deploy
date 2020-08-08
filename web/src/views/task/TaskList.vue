@@ -213,7 +213,6 @@
                             type: 'success',
                             message: res.msg
                         })
-                        console.log(res);
                         /* 响应式增加 */
                         this.$set(this.taskProcess, row.task_id, {})
                         this.$set(this.taskProcess[row.task_id], 'com_active', 1)
