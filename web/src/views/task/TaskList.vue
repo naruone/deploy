@@ -213,6 +213,14 @@
                             type: 'success',
                             message: res.msg
                         })
+                        console.log(res);
+                        /* 响应式增加 */
+                        this.$set(this.taskProcess, row.task_id, {})
+                        this.$set(this.taskProcess[row.task_id], 'com_active', 1)
+                        this.$set(this.taskProcess[row.task_id], 'servers', {})
+                        for (let ip of res.data) {
+                            this.$set(this.taskProcess[row.task_id]['servers'], ip, 0)
+                        }
                         this.getTableData()
                     }).catch(() => {
                     })
@@ -272,11 +280,6 @@
                 })
             },
             UpdateProcessBar(resp) {
-                if (this.taskProcess[resp.taskId] === undefined) {
-                    this.$set(this.taskProcess, resp.taskId, {})
-                    this.$set(this.taskProcess[resp.taskId], 'com_active', 1)
-                    this.$set(this.taskProcess[resp.taskId], 'servers', {})
-                }
                 let _data = resp['data'], _comProcess = 1
                 for (let v of this.jumper) {
                     if (_data[v.k] !== undefined) {
@@ -284,17 +287,14 @@
                     }
                 }
                 this.taskProcess[resp.taskId]['com_active'] = _comProcess;
-                for (let ipa in _data['servers']) {
-                    if (this.taskProcess[resp.taskId]['servers'][ipa] === undefined) {
-                        this.$set(this.taskProcess[resp.taskId]['servers'], ipa, 0)
-                    }
+                for (let ip in _data['servers']) {
                     let _process = 0
                     for (let _pk of this.server) {
-                        if (_data['servers'][ipa][_pk.k] !== undefined) {
+                        if (_data['servers'][ip][_pk.k] !== undefined) {
                             _process++
                         }
                     }
-                    this.taskProcess[resp.taskId]['servers'][ipa] = _process
+                    this.taskProcess[resp.taskId]['servers'][ip] = _process
                 }
             },
             afterUpdateList() {

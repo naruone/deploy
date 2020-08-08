@@ -109,19 +109,20 @@ func GetBranches(c *gin.Context) {
 
 func Deploy(c *gin.Context) {
     var (
-        err    error
-        taskId int
+        servers []string
+        err     error
+        taskId  int
     )
     if taskId, err = strconv.Atoi(c.Query("task_id")); err != nil {
         utils.FailWithMessage(err.Error(), c)
         return
     }
 
-    if err = service.Deploy(taskId); err != nil {
+    if servers, err = service.Deploy(taskId); err != nil {
         utils.FailWithMessage(err.Error(), c)
         return
     }
-    utils.Ok(c)
+    utils.OkWithData(servers, c)
 }
 
 func SaveTask(c *gin.Context) {

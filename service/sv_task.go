@@ -49,8 +49,9 @@ func GetVersions(projectId int, branch string) (res []model.CsvVersion, err erro
 }
 
 //发布
-func Deploy(taskId int) (err error) {
+func Deploy(taskId int) (servers []string, err error) {
     var prepareTask model.TaskPrepare
+    servers = nil
     if prepareTask, err = model.PrepareTask(taskId); err != nil {
         return
     }
@@ -59,6 +60,9 @@ func Deploy(taskId int) (err error) {
         return
     }
     model.UpdateTaskStatusAndOutput(prepareTask.Task.TaskId, map[string]interface{}{"status": model.TaskStarting})
+    for _, s := range prepareTask.Servers {
+        servers = append(servers, s.SshAddr)
+    }
     go deployScheduleStart(&prepareTask)
     return
 }
