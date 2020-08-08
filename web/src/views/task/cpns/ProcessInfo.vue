@@ -10,7 +10,7 @@
                 <el-step v-for="v in comProcess" :title="v.v"></el-step>
             </el-steps>
         </div>
-        <div class="process-info-server">
+        <div class="process-info-server" v-if="processData[taskId]">
             <div v-for="(_act,k) in processData[taskId]['servers']">
                 <el-divider content-position="left">{{k}}</el-divider>
                 <el-steps :space="100" finish-status="success"
