@@ -4,14 +4,10 @@ import (
     "deploy/model"
     "deploy/model/request"
     "deploy/model/response"
+    "deploy/service"
     "deploy/utils"
     "github.com/gin-gonic/gin"
     "strconv"
-)
-
-//任务相关
-import (
-    "deploy/service"
 )
 
 func GetTaskList(c *gin.Context) {
