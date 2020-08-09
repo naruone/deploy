@@ -430,7 +430,6 @@ func deployProcessHandle(resChan chan *model.DeployTaskResult, prepareTask *mode
 //切换工作目录
 func switchSymbol(resMap []*model.DeployTaskResult) {
     var (
-        serverConn *utils.ServerConn
         _oneRes    *model.DeployTaskResult
         wg         sync.WaitGroup
     )
@@ -438,7 +437,7 @@ func switchSymbol(resMap []*model.DeployTaskResult) {
     wg.Add(len(resMap))
     if _oneRes.Params.Jumper.ServerId != 0 { //跳板机操作
         // 1. 连接跳板机.  2. [并发]执行目标机远程命令
-        serverConn = utils.NewServerConn(_oneRes.Params.Jumper.SshAddr+":"+strconv.Itoa(_oneRes.Params.Jumper.SshPort),
+        serverConn := utils.NewServerConn(_oneRes.Params.Jumper.SshAddr+":"+strconv.Itoa(_oneRes.Params.Jumper.SshPort),
             _oneRes.Params.Jumper.SshUser, _oneRes.Params.Jumper.SshKeyPath)
         for _, v := range resMap {
             go func(res *model.DeployTaskResult) {
@@ -464,7 +463,7 @@ func switchSymbol(resMap []*model.DeployTaskResult) {
     } else {
         for _, r := range resMap {
             go func(_res *model.DeployTaskResult) {
-                serverConn = utils.NewServerConn(_res.Params.Server.SshAddr+":"+strconv.Itoa(_res.Params.Server.SshPort),
+                serverConn := utils.NewServerConn(_res.Params.Server.SshAddr+":"+strconv.Itoa(_res.Params.Server.SshPort),
                     _res.Params.Server.SshUser, _res.Params.Server.SshKeyPath)
                 if _, err := serverConn.RunCmd(_res.SwitchCmd); err != nil {
                     ProcessListenChan <- &TaskProcessReport{
