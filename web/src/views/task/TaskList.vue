@@ -24,7 +24,12 @@
                 prop="task_id"
                 fixed
                 label="ID"
-                width="40">
+                width="60">
+                <template slot-scope="scope">
+                    <span style="color: red; margin-right: 10px"
+                          v-if="scope.row.uuid === scope.row.EnvCfg.uuid">☆</span>
+                    <span>{{scope.row.task_id}}</span>
+                </template>
             </el-table-column>
             <el-table-column
                 fixed
@@ -243,6 +248,7 @@
                             type: isFail ? 'error' : 'success',
                             message: isFail ? '回滚失败(可能部分失败), 原因:' + JSON.stringify(res.data) : '回滚成功'
                         })
+                        this.getTableData()
                     }).catch(() => {
                     })
                 }).catch(() => {
