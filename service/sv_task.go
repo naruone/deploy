@@ -67,6 +67,76 @@ func Deploy(taskId int) (servers []string, err error) {
     return
 }
 
+func RollBack(taskId int) (res interface{}, err error) {
+    var (
+        prepareTask model.TaskPrepare
+        serverConn  *utils.ServerConn
+        wg          sync.WaitGroup
+        switchCmd   string
+        mapLock     sync.Mutex
+        result      = map[string]map[string]string{
+            "success": {},
+            "error":   {},
+        }
+    )
+    if prepareTask, err = model.PrepareTask(taskId); err != nil {
+        return
+    }
+    if prepareTask.Task.Status != model.TaskRunSuccess {
+        err = errors.New("状态错误,只有发布成功的任务才能被回滚")
+        return
+    }
+    if prepareTask.Task.Uuid == prepareTask.Env.Uuid {
+        err = errors.New("该环境目前已经是当前版本, 无需切换")
+        return
+    }
+
+    switchCmd = "ln -snf " + strings.TrimRight(config.GConfig.ServerWorkDir, "/") + "/" + prepareTask.Task.Uuid +
+        " " + prepareTask.Project.WebRoot
+    wg.Add(len(prepareTask.Servers))
+    if prepareTask.Jumper.ServerId != 0 { //跳板机操作
+        // 1. 连接跳板机.  2. [并发]执行目标机远程命令
+        serverConn = utils.NewServerConn(prepareTask.Jumper.SshAddr+":"+strconv.Itoa(prepareTask.Jumper.SshPort),
+            prepareTask.Jumper.SshUser, prepareTask.Jumper.SshKeyPath)
+        for _, v := range prepareTask.Servers {
+            go func(srv model.Server) {
+                if _, err := serverConn.RunCmd(remoteGenCmd(srv, switchCmd)); err != nil {
+                    mapLock.Lock()
+                    result["error"][srv.SshAddr] = err.Error()
+                } else {
+                    mapLock.Lock()
+                    result["success"][srv.SshAddr] = srv.SshAddr
+                }
+                mapLock.Unlock()
+                wg.Done()
+            }(v)
+        }
+        serverConn.Close()
+    } else {
+        for _, v := range prepareTask.Servers {
+            go func(srv model.Server) {
+                serverConn = utils.NewServerConn(srv.SshAddr+":"+strconv.Itoa(srv.SshPort), srv.SshUser, srv.SshKeyPath)
+                if _, err := serverConn.RunCmd(switchCmd); err != nil {
+                    mapLock.Lock()
+                    result["error"][srv.SshAddr] = err.Error()
+                } else {
+                    mapLock.Lock()
+                    result["success"][srv.SshAddr] = srv.SshAddr
+                }
+                mapLock.Unlock()
+                serverConn.Close()
+                wg.Done()
+            }(v)
+        }
+    }
+    wg.Wait()
+    if len(result["error"]) == 0 { //无出错
+        model.UpdateEnvRes(prepareTask.Env.EnvId, prepareTask.Task.Version, prepareTask.Task.Uuid)
+    }
+    res = result
+    return
+}
+
 //准备工作 & 调度发布任务
 func deployScheduleStart(prepareTask *model.TaskPrepare) {
     var (

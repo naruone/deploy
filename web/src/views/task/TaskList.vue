@@ -238,9 +238,10 @@
                     type: 'warning'
                 }).then(async () => {
                     await rollBackTask({task_id: row.task_id}).then((res) => {
+                        let isFail = Object.keys(res.data.error).length > 0
                         this.$message({
-                            type: 'success',
-                            message: res.msg
+                            type: isFail ? 'error' : 'success',
+                            message: isFail ? '回滚失败(可能部分失败), 原因:' + JSON.stringify(res.data) : '回滚成功'
                         })
                     }).catch(() => {
                     })

@@ -153,16 +153,18 @@ func SaveTask(c *gin.Context) {
 func RollBack(c *gin.Context) {
     var (
         taskId int
+        res    interface{}
         err    error
     )
     if taskId, err = strconv.Atoi(c.Query("task_id")); err != nil {
         utils.FailWithMessage(err.Error(), c)
         return
     }
-    taskId = taskId
-    // todo 待完善
-
-    utils.OkWithData(nil, c)
+    if res, err = service.RollBack(taskId); err != nil {
+        utils.FailWithMessage(err.Error(), c)
+        return
+    }
+    utils.OkWithData(res, c)
 }
 
 func DeployInfo(c *gin.Context) {
