@@ -49,7 +49,9 @@ func GetUserList(search *request.ComPageInfo) (userList []User, total int, err e
     if err = db.Model(&userList).Count(&total).Error; err != nil {
         return
     }
-    err = db.Limit(search.PageSize).Offset(search.PageSize * (search.CurrentPage - 1)).Find(&userList).Error
+    err = db.Limit(search.PageSize).Offset(search.PageSize * (search.CurrentPage - 1)).Select([]string{
+        "user_id", "user_name", "nick_name", "create_at", "status",
+    }).Find(&userList).Error
     return
 }
 

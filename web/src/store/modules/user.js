@@ -17,15 +17,12 @@ export const user = {
     },
     mutations: {
         setUserInfo(state, userInfo) {
-            // 这里的 `state` 对象是模块的局部状态
             state.userInfo = userInfo
         },
         setToken(state, token) {
-            // 这里的 `state` 对象是模块的局部状态
             state.token = token
         },
         setExpiresAt(state, expiresAt) {
-            // 这里的 `state` 对象是模块的局部状态
             state.expiresAt = expiresAt
         },
         LoginOut(state) {
@@ -34,12 +31,6 @@ export const user = {
             state.expiresAt = ""
             router.push({name: 'login', replace: true})
         },
-        ResetUserInfo(state, userInfo = {}) {
-            state.userInfo = {
-                ...state.userInfo,
-                ...userInfo
-            }
-        }
     },
     actions: {
         async LoginIn({commit}, loginInfo) {
