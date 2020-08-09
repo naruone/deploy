@@ -23,6 +23,7 @@ func InitRouters() (router *gin.Engine) {
 
     sysRouter := routerGroup.Group("sys").Use(middleware.JWTAuth())
     {
+        sysRouter.GET("getDeployInfo", api.GetDeployServerInfo)
         sysRouter.POST("modifyPwd", api.ModifyPwd)
         sysRouter.POST("getUserList", api.GetUserList)
         sysRouter.POST("saveUser", api.SaveUser)

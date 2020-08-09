@@ -33,3 +33,10 @@ export const getCfgSelectOptions = (data) => {
     })
 }
 
+export const getDeployInfo = (data) => {
+    return service({
+        url: "/sys/getDeployInfo",
+        method: 'get',
+        params: data
+    })
+}

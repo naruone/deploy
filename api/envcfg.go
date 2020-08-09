@@ -7,8 +7,17 @@ import (
     "deploy/service"
     "deploy/utils"
     "github.com/gin-gonic/gin"
+    "runtime"
     "strconv"
 )
+
+func GetDeployServerInfo(c *gin.Context) {
+    utils.OkWithData(map[string]string{
+        "system":     runtime.GOOS + " " + runtime.GOARCH,
+        "cpu":        strconv.Itoa(runtime.GOMAXPROCS(0)),
+        "go_version": runtime.Version(),
+    }, c)
+}
 
 func GetEnvCfgList(c *gin.Context) {
     var (
