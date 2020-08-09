@@ -70,7 +70,6 @@ func Deploy(taskId int) (servers []string, err error) {
 func RollBack(taskId int) (res interface{}, err error) {
     var (
         prepareTask model.TaskPrepare
-        serverConn  *utils.ServerConn
         wg          sync.WaitGroup
         switchCmd   string
         mapLock     sync.Mutex
@@ -96,7 +95,7 @@ func RollBack(taskId int) (res interface{}, err error) {
     wg.Add(len(prepareTask.Servers))
     if prepareTask.Jumper.ServerId != 0 { //跳板机操作
         // 1. 连接跳板机.  2. [并发]执行目标机远程命令
-        serverConn = utils.NewServerConn(prepareTask.Jumper.SshAddr+":"+strconv.Itoa(prepareTask.Jumper.SshPort),
+        serverConn := utils.NewServerConn(prepareTask.Jumper.SshAddr+":"+strconv.Itoa(prepareTask.Jumper.SshPort),
             prepareTask.Jumper.SshUser, prepareTask.Jumper.SshKeyPath)
         for _, v := range prepareTask.Servers {
             go func(srv model.Server) {
@@ -115,7 +114,7 @@ func RollBack(taskId int) (res interface{}, err error) {
     } else {
         for _, v := range prepareTask.Servers {
             go func(srv model.Server) {
-                serverConn = utils.NewServerConn(srv.SshAddr+":"+strconv.Itoa(srv.SshPort), srv.SshUser, srv.SshKeyPath)
+                serverConn := utils.NewServerConn(srv.SshAddr+":"+strconv.Itoa(srv.SshPort), srv.SshUser, srv.SshKeyPath)
                 if _, err := serverConn.RunCmd(switchCmd); err != nil {
                     mapLock.Lock()
                     result["error"][srv.SshAddr] = err.Error()
