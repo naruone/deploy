@@ -22,6 +22,9 @@
             <div class="item">
                 (GC)内存: {{data['next_gc_mem'] }}
             </div>
+            <div class="item">
+                运行时间: {{data['run_time'] }}
+            </div>
         </el-card>
         <el-card class="box-card">
             <div slot="header">
