@@ -74,8 +74,6 @@ func SystemInfo() map[string]interface{} {
     )
     runtime.ReadMemStats(&mstat)
 
-    costTime := int(time.Since(config.GConfig.StartTime).Seconds())
-
     if mstat.LastGC != 0 {
         afterLastGC = fmt.Sprintf("%.1fs", float64(time.Now().UnixNano()-int64(mstat.LastGC))/1000/1000/1000)
     } else {
@@ -84,7 +82,7 @@ func SystemInfo() map[string]interface{} {
 
     return map[string]interface{}{
         "system":          runtime.GOOS + " " + runtime.GOARCH,
-        "run_time":        fmt.Sprintf("%d天%d小时%d分%d秒", costTime/(3600*24), costTime%(3600*24)/3600, costTime%3600/60, costTime%(60)),
+        "start_time":      config.GConfig.StartTime,
         "goroutine_num":   runtime.NumGoroutine(),
         "go_version":      runtime.Version(),
         "cpu":             runtime.NumCPU(),

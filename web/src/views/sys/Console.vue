@@ -5,7 +5,7 @@
                 <span>发布系统环境</span>
             </div>
             <div class="item">
-                系统: {{data['system'] }}
+                系统信息: {{data['system'] }}
             </div>
             <div class="item">
                 Go 版本: {{data['go_version'] }}
@@ -23,7 +23,7 @@
                 (GC)内存: {{data['next_gc_mem'] }}
             </div>
             <div class="item">
-                运行时间: {{data['run_time'] }}
+                启动时间: {{data['start_time'] }}
             </div>
         </el-card>
         <el-card class="box-card">
