@@ -5,46 +5,27 @@
                 <span>发布系统环境</span>
             </div>
             <div class="item">
-                系统环境: {{data['system'] }}
+                系统: {{data['system'] }}
             </div>
             <div class="item">
                 Go 版本: {{data['go_version'] }}
             </div>
             <div class="item">
-                CPU核心数: {{data['cpu'] }}
+                CPU 核心: {{data['cpu'] }}
+            </div>
+            <div class="item">
+                Go 协程数: {{data['goroutine_num'] }}
+            </div>
+            <div class="item">
+                Mem 占用: {{data['sys_mem_used'] }}
+            </div>
+            <div class="item">
+                (GC)内存: {{data['next_gc_mem'] }}
             </div>
         </el-card>
         <el-card class="box-card">
             <div slot="header">
-                <span>发布统计</span>
-            </div>
-            <div class="item">
-                xxxx: xxxx
-            </div>
-            <div class="item">
-                xxxx: xxxx
-            </div>
-            <div class="item">
-                xxxx: xxxx
-            </div>
-        </el-card>
-        <el-card class="box-card">
-            <div slot="header">
-                <span>项目统计</span>
-            </div>
-            <div class="item">
-                xxxx: xxxx
-            </div>
-            <div class="item">
-                xxxx: xxxx
-            </div>
-            <div class="item">
-                xxxx: xxxx
-            </div>
-        </el-card>
-        <el-card class="box-card">
-            <div slot="header">
-                <span>XXXX展示</span>
+                <span>XXXX统计数据(暂不支持-懒)</span>
             </div>
             <div class="item">
                 xxxx: xxxx
@@ -86,12 +67,19 @@
     }
 
     .box-card {
-        width: 45%;
+        width: 100%;
     }
 
     .item {
-        margin-bottom: 18px;
+        width: 50%;
+        padding-top: 10px;
+        text-indent: 1.2em;
+        padding-bottom: 10px;
         color: #555555;
         font-size: 14px;
+        display: inline-block;
+        outline: none;
+        box-sizing: border-box;
+        border-right: 1px #CCC solid;
     }
 </style>

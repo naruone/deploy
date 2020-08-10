@@ -5,6 +5,7 @@ import (
     "io/ioutil"
     "log"
     "sync"
+    "time"
 )
 
 var (
@@ -24,6 +25,7 @@ type SysConfig struct {
     Repo              string    `json:"repo"`
     RepoPackage       string    `json:"repo_package"`
     ServerWorkDir     string    `json:"srv_work_dir"`
+    StartTime         time.Time `json:"start_time"`
 }
 
 type DbConfig struct {
@@ -61,5 +63,6 @@ func InitConfig() {
     if err = json.Unmarshal(bytes, &sysConfig); err != nil {
         log.Fatal(err)
     }
+    sysConfig.StartTime = time.Now()
     GConfig = &sysConfig
 }
