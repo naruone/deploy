@@ -55,6 +55,7 @@ func GetRepository(project *model.Project) *Repository {
 func (repo *Repository) GetBranches() (result []string, err error) {
     var out string
     result = []string{}
+    _, _, _ = utils.RunCmd(repo.Path, "git", "fetch", "-pq")
     if out, _, err = utils.RunCmd(repo.Path, "git", "branch", "-r"); err != nil {
         return
     }
