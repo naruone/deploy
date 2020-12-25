@@ -1,0 +1,40 @@
+@import url(normalize.css);
+
+body {
+    margin: 0;
+}
+
+#app {
+    background: #eee;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.button-box {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 10px;
+}
+
+.page-content {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+
+.drawerForm {
+    width: 85%;
+    margin: auto;
+}
+
+.el-drawer:focus, .el-drawer > header > span:focus {
+    outline: 0;
+}
+
+.el-drawer .drawerForm .el-select {
+    width: 100%;
+}
+
+.el-table .pre-line .cell { /*table cell 单元格\n换行*/
+    white-space: pre-line;
+}

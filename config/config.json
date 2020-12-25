@@ -1,0 +1,25 @@
+{
+    "env": "production",
+    "port": 8085,
+    "db": {
+        "host": "127.0.0.1",
+        "database": "deploy",
+        "username": "root",
+        "password": "123456",
+        "port": 3306,
+        "charset": "utf8",
+        "timeout": 10,
+        "maxOpenConnects": 50,
+        "maxIdleConnects": 10
+    },
+    "jwt-signing-key": "deploy-corey",
+    "captcha": {
+        "long": 4,
+        "width": 75,
+        "height": 35
+    },
+    "ssh_connect_timeout": 5,
+    "repo": "/tmp/_repo",
+    "repo_package": "/tmp/_repo/_package",
+    "srv_work_dir": "/opt/_repo"
+}
