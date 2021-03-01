@@ -11,6 +11,7 @@
 ![home](./img/home.png)
 ![servers](./img/servers.png)
 ![env](./img/env.png)
+![processing](./img/processing.png)
 ![task](./img/task.png)
 
 
