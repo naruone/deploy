@@ -99,8 +99,8 @@
 </template>
 
 <script>
-    import tableInfo from "../../plugins/mixins/tableInfo";
-    import {delEnvCfg, getEnvCfgList} from "../../api/env_cfg";
+    import tableInfo from "@/plugins/mixins/tableInfo";
+    import {delEnvCfg, getEnvCfgList} from "@/api/env_cfg";
     import CfgEdit from "./cpns/CfgEdit";
 
     export default {

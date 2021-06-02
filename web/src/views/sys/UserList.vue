@@ -101,8 +101,8 @@
 </template>
 
 <script>
-    import tableInfo from '../../plugins/mixins/tableInfo'
-    import {getUserList, saveUser, setUserStatus} from "../../api/user";
+    import tableInfo from '@/plugins/mixins/tableInfo'
+    import {getUserList, saveUser, setUserStatus} from "@/api/user";
 
     export default {
         name: "UserList",

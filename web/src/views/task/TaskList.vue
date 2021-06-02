@@ -145,12 +145,12 @@
 </template>
 
 <script>
-    import tableInfo from "../../plugins/mixins/tableInfo";
+    import tableInfo from "@/plugins/mixins/tableInfo";
     import TaskEdit from "./cpns/TaskEdit";
     import TaskInfo from "./cpns/TaskInfo";
     import ProcessInfo from "./cpns/ProcessInfo"
-    import {deleteTask, deployTask, getTaskList, rollBackTask} from "../../api/task";
-    import {InitWebSocket} from "../../utils/websocket";
+    import {deleteTask, deployTask, getTaskList, rollBackTask} from "@/api/task";
+    import {InitWebSocket} from "@/utils/websocket";
 
     export default {
         name: "TaskList",

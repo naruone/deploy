@@ -1,6 +1,6 @@
 import axios from 'axios';
 import {Loading, Message} from 'element-ui';
-import {store} from '../store/index'
+import {store} from '@/store'
 
 const service = axios.create({
     baseURL: process.env.VUE_APP_DEPLOY_BASE_API,

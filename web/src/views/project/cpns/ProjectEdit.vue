@@ -34,7 +34,7 @@
 </template>
 
 <script>
-    import {saveProject} from '../../../api/project'
+    import {saveProject} from '@/api/project'
 
     export default {
         name: "ProjectEdit",

@@ -44,7 +44,7 @@
 </template>
 
 <script>
-    import {getDeployInfo} from '../../api/env_cfg'
+    import {getDeployInfo} from '@/api/env_cfg'
 
     export default {
         name: "Console",

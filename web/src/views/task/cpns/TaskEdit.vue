@@ -48,7 +48,7 @@
 </template>
 
 <script>
-    import {getBranches, getEnvOptions, getVersions, saveTask} from "../../../api/task";
+    import {getBranches, getEnvOptions, getVersions, saveTask} from "@/api/task";
 
     export default {
         name: "TaskEdit",

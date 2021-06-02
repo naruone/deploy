@@ -43,7 +43,7 @@
 </template>
 
 <script>
-    import {getCfgSelectOptions, saveEnvCfg} from "../../../api/env_cfg";
+    import {getCfgSelectOptions, saveEnvCfg} from "@/api/env_cfg";
 
     export default {
         name: "CfgEdit",

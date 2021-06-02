@@ -36,7 +36,7 @@
 </template>
 
 <script>
-    import {saveServer} from "../../../api/server";
+    import {saveServer} from "@/api/server";
 
     export default {
         name: "ServerEdit",

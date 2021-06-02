@@ -102,8 +102,8 @@
 </template>
 
 <script>
-    import tableInfo from "../../plugins/mixins/tableInfo";
-    import {delProject, getProjectList, initProject} from "../../api/project"
+    import tableInfo from "@/plugins/mixins/tableInfo";
+    import {delProject, getProjectList, initProject} from "@/api/project"
     import ProjectEdit from "./cpns/ProjectEdit";
 
     export default {

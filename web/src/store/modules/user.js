@@ -1,5 +1,5 @@
-import router from '../../router/index'
-import {login} from '../../api/user'
+import router from '@/router/index'
+import {login} from '@/api/user'
 
 export const user = {
     namespaced: true,
@@ -29,7 +29,6 @@ export const user = {
             state.userInfo = {}
             state.token = ""
             state.expiresAt = ""
-            router.push({name: 'login', replace: true})
         },
     },
     actions: {
@@ -44,8 +43,9 @@ export const user = {
             }
             await router.push({path: String(redirect)})
         },
-        LoginOut({commit}) {
+        async LoginOut({commit}, redirect = true) {
             commit("LoginOut")
+            if (redirect) await router.push({name: 'login', replace: true})
         }
     },
     getters: {

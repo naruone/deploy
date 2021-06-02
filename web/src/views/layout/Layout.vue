@@ -44,7 +44,7 @@
     import Aside from "./cpns/Aside";
     import Header from "./cpns/Header";
     import BreadCrumb from "./cpns/BreadCrumb";
-    import {modifyPwd} from "../../api/user";
+    import {modifyPwd} from "@/api/user";
 
     export default {
         name: "Layout",

@@ -1,4 +1,4 @@
-import {store} from "../store/index";
+import {store} from "@/store";
 
 let ws = null
 let timer = null

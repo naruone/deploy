@@ -46,7 +46,7 @@
 </template>
 
 <script>
-    import {captcha} from '../../api/user'
+    import {captcha} from '@/api/user'
     import {mapActions} from "vuex";
 
     export default {

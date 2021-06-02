@@ -81,9 +81,9 @@
 </template>
 
 <script>
-    import tableInfo from "../../plugins/mixins/tableInfo";
+    import tableInfo from "@/plugins/mixins/tableInfo";
     import ServerEdit from "./cpns/ServerEdit";
-    import {delServer, getServerList} from "../../api/server";
+    import {delServer, getServerList} from "@/api/server";
 
     export default {
         name: "ServerList",

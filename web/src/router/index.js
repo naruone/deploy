@@ -44,7 +44,10 @@ const router = new Router({
     routes
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
+    if (store.getters['user/expiresAt'] <= (new Date()).getTime()) {
+       await store.dispatch('user/LoginOut', false)
+    }
     const token = store.getters['user/token']
     document.title = process.env.VUE_APP_TITLE + (to.meta.title ? '-' + to.meta.title : '')
     if (to.meta.needLogin !== false) {  //需要登录
@@ -53,7 +56,7 @@ router.beforeEach((to, from, next) => {
         } else {
             next({
                 name: "login",
-                query: {redirect: document.location.pathname}
+                query: {redirect: to.fullPath}
             })
         }
     } else {    //无需登录
