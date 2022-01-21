@@ -122,7 +122,8 @@
                                icon="el-icon-delete" circle
                                @click="delTask(scope.row)"
                                slot="reference"></el-button>
-                    <el-tooltip v-if="scope.row.status === 8 && scope.row.uuid !== ''" content="回滚" placement="top"
+                    <el-tooltip v-if="scope.row.status === 8 && scope.row.uuid !== ''
+                     && scope.row.uuid !== scope.row.EnvCfg.uuid" content="回滚" placement="top"
                                 effect="dark">
                         <el-button type="primary"
                                    icon="el-icon-refresh-left" circle
