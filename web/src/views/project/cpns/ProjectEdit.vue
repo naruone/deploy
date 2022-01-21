@@ -11,14 +11,14 @@
                 <el-form-item label="项目名称" prop="project_name">
                     <el-input ref="pInput" v-model="projectForm.project_name" autocomplete="off"></el-input>
                 </el-form-item>
-                <el-form-item label="Git 仓库" prop="repo_url">
-                    <el-input :disabled="fieldDisabled" v-model="projectForm.repo_url" autocomplete="off"></el-input>
+                <el-form-item label="代码仓库" prop="repo_url">
+                    <el-input :disabled="fieldDisabled" v-model="projectForm.repo_url" placeholder="git仓库地址" autocomplete="off"></el-input>
                 </el-form-item>
-                <el-form-item label="项目Dir" prop="dst">
-                    <el-input :disabled="fieldDisabled" v-model="projectForm.dst" autocomplete="off"></el-input>
+                <el-form-item label="本地目录" prop="dst">
+                    <el-input :disabled="fieldDisabled" placeholder="发布机项目文件夹(非路径)" v-model="projectForm.dst" autocomplete="off"></el-input>
                 </el-form-item>
-                <el-form-item label="WebRoot" prop="web_root">
-                    <el-input v-model="projectForm.web_root" autocomplete="off"></el-input>
+                <el-form-item label="目标路径" prop="web_root">
+                    <el-input v-model="projectForm.web_root" placeholder="目标机项目路径" autocomplete="off"></el-input>
                 </el-form-item>
                 <el-form-item label="AftScript" prop="after_script">
                     <el-input :autosize="{maxRows:10,minRows:4}" type="textarea" v-model="projectForm.after_script"

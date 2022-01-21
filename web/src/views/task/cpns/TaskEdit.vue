@@ -21,13 +21,13 @@
                         <el-radio v-for="v in dType" :key="v.value" :label="v.value">{{ v.label }}</el-radio>
                     </el-radio-group>
                 </el-form-item>
-                <el-form-item label="分支" prop="branch">
+                <el-form-item label="代码分支" prop="branch">
                     <el-select @change="loadVersion(taskForm.env_id,taskForm.branch)" v-model="taskForm.branch"
                                placeholder="注意: 选择目标环境当前版本号,相当于全量发">
                         <el-option v-for="v in branchOptions" :key="v" :label="v" :value="v"/>
                     </el-select>
                 </el-form-item>
-                <el-form-item label="版本" prop="version">
+                <el-form-item label="代码版本" prop="version">
                     <el-select v-model="taskForm.version">
                         <el-option v-for="v in versionOptions" :key="v.Version" :label="v.Message" :value="v.Version"/>
                     </el-select>

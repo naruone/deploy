@@ -17,13 +17,13 @@
                 <el-form-item label="服务器地址" prop="ssh_addr">
                     <el-input ref="pInput" v-model="serverForm.ssh_addr" autocomplete="off"></el-input>
                 </el-form-item>
-                <el-form-item label="端口" prop="ssh_port">
+                <el-form-item label="SSH端口" prop="ssh_port">
                     <el-input v-model.number="serverForm.ssh_port" autocomplete="off"></el-input>
                 </el-form-item>
-                <el-form-item label="用户名" prop="ssh_user">
+                <el-form-item label="登录名称" prop="ssh_user">
                     <el-input v-model="serverForm.ssh_user" autocomplete="off"></el-input>
                 </el-form-item>
-                <el-form-item label="秘钥Path" prop="ssh_key_path">
+                <el-form-item label="秘钥路径" prop="ssh_key_path">
                     <el-input v-model="serverForm.ssh_key_path" autocomplete="off"></el-input>
                 </el-form-item>
                 <el-form-item>

@@ -11,17 +11,17 @@
                 <el-form-item label="环境名称" prop="env_name">
                     <el-input ref="pInput" v-model="cfgForm.env_name" autocomplete="off"></el-input>
                 </el-form-item>
-                <el-form-item label="项目" prop="project_id">
+                <el-form-item label="发布项目" prop="project_id">
                     <el-select v-model="cfgForm.project_id">
                         <el-option v-for="v in projectOptions" :key="v.value" :label="v.label" :value="v.value"/>
                     </el-select>
                 </el-form-item>
-                <el-form-item label="目标机" prop="server_ids">
+                <el-form-item label="目标服务器" prop="server_ids">
                     <el-select multiple v-model="cfgForm.server_ids" placeholder="请选择目标机">
                         <el-option v-for="v in serverOptions" :key="v.value" :label="v.label" :value="v.value"/>
                     </el-select>
                 </el-form-item>
-                <el-form-item label="跳板机" prop="jump_server">
+                <el-form-item label="跳板服务器" prop="jump_server">
                     <el-select v-model="cfgForm.jump_server">
                         <el-option v-for="v in jumperOptions" :key="v.value" :label="v.label" :value="v.value"/>
                     </el-select>
