@@ -43,118 +43,118 @@
 </template>
 
 <script>
-    import {getCfgSelectOptions, saveEnvCfg} from "@/api/env_cfg";
+import {getCfgSelectOptions, saveEnvCfg} from "@/api/env_cfg";
 
-    export default {
-        name: "CfgEdit",
-        data() {
-            return {
-                showDialog: false,
-                cfgForm: {
-                    env_id: 0,
-                    env_name: '',
-                    project_id: 0,
-                    server_ids: [],
-                    jump_server: 0,
-                    after_script: '',
-                    keep_version_cnt: 1 //此次设置默认值无用, 会被setEditVal方法覆盖
-                },
-                cfgRules: {
-                    env_name: [
-                        {required: true, message: '环境名称必填', trigger: 'blur'},
-                        {min: 3, max: 200, message: '长度在3到200个字符', trigger: 'blur'}
-                    ],
-                    project_id: [
-                        {required: true, message: '项目必选', trigger: 'change'},
-                    ],
-                    server_ids: [
-                        {required: true, message: '目标机必选', trigger: 'blur'},
-                    ],
-                    after_script: [
-                        {max: 5000, message: '长度小于5000个字符', trigger: 'blur'}
-                    ]
-                },
-                projectOptions: [],
-                serverOptions: [],
-                jumperOptions: [{
-                    label: '请选择',
-                    value: 0
-                }]
-            }
-        },
-        watch: {
-            showDialog(n) {
-                if (n) this.getSelVal()
-            }
-        },
-        methods: {
-            cfgSave() {
-                this.$refs.cfgForm.validate(async (valid) => {
-                    if (valid) {
-                        let formData = Object.assign({}, this.cfgForm);
-                        formData.server_ids = formData.server_ids.join(',')
-                        await saveEnvCfg(formData).then((res) => {
-                            this.$message({
-                                type: 'success',
-                                message: res.msg,
-                                showClose: true
-                            });
-                            this.$parent.getTableData()
-                            this.handleClose()
-                        }).catch((_) => {
-                        })
-                    }
-                })
+export default {
+    name: "CfgEdit",
+    data() {
+        return {
+            showDialog: false,
+            cfgForm: {
+                env_id: 0,
+                env_name: '',
+                project_id: 0,
+                server_ids: [],
+                jump_server: 0,
+                after_script: '',
+                keep_version_cnt: 1 //此次设置默认值无用, 会被setEditVal方法覆盖
             },
-            setEditVal(row) {
-                for (let k in this.cfgForm) {
-                    this.$set(this.cfgForm, k, row[k] ? row[k] : '')
-                }
-                if (typeof this.cfgForm.server_ids === 'string' && String(this.cfgForm.server_ids) !== '') {
-                    this.cfgForm.server_ids = this.cfgForm.server_ids.split(',').map((v) => {
-                        return Number(v)
+            cfgRules: {
+                env_name: [
+                    {required: true, message: '环境名称必填', trigger: 'blur'},
+                    {min: 3, max: 200, message: '长度在3到200个字符', trigger: 'blur'}
+                ],
+                project_id: [
+                    {required: true, message: '项目必选', trigger: 'change'},
+                ],
+                server_ids: [
+                    {required: true, message: '目标机必选', trigger: 'blur'},
+                ],
+                after_script: [
+                    {max: 5000, message: '长度小于5000个字符', trigger: 'blur'}
+                ]
+            },
+            projectOptions: [],
+            serverOptions: [],
+            jumperOptions: [{
+                label: '请选择',
+                value: 0
+            }]
+        }
+    },
+    watch: {
+        showDialog(n) {
+            if (n) this.getSelVal()
+        }
+    },
+    methods: {
+        cfgSave() {
+            this.$refs.cfgForm.validate(async (valid) => {
+                if (valid) {
+                    let formData = Object.assign({}, this.cfgForm);
+                    formData.server_ids = formData.server_ids.join(',')
+                    await saveEnvCfg(formData).then((res) => {
+                        this.$message({
+                            type: 'success',
+                            message: res.msg,
+                            showClose: true
+                        });
+                        this.$parent.getTableData()
+                        this.handleClose()
+                    }).catch((_) => {
                     })
                 }
-                this.showDialog = true
-            },
-            handleClose() {
-                for (let k in this.cfgForm) {
-                    this.$set(this.cfgForm, k, '')
-                }
-                this.cfgForm.server_ids = []
-                this.$refs.cfgForm.clearValidate()
-                this.showDialog = false
-                this.projectOptions = []
-                this.serverOptions = []
-                this.jumperOptions = [{
-                    label: '请选择',
-                    value: 0
-                }]
-            },
-            async getSelVal() {
-                await getCfgSelectOptions().then((res) => {
-                    for (let v of res.data['projects']) {
-                        this.projectOptions.push({
-                            label: v.project_name,
-                            value: v.project_id
-                        })
-                    }
-                    for (let v of res.data['servers']) {
-                        if (v.type === 1) { //目标机
-                            this.serverOptions.push({
-                                label: v.ssh_addr,
-                                value: v.server_id
-                            })
-                        } else {//跳板机
-                            this.jumperOptions.push({
-                                label: v.ssh_addr,
-                                value: v.server_id
-                            })
-                        }
-                    }
-                }).catch(() => {
+            })
+        },
+        setEditVal(row) {
+            for (let k in this.cfgForm) {
+                this.$set(this.cfgForm, k, row[k] ? row[k] : '')
+            }
+            if (typeof this.cfgForm.server_ids === 'string' && String(this.cfgForm.server_ids) !== '') {
+                this.cfgForm.server_ids = this.cfgForm.server_ids.split(',').map((v) => {
+                    return Number(v)
                 })
             }
+            this.showDialog = true
+        },
+        handleClose() {
+            for (let k in this.cfgForm) {
+                this.$set(this.cfgForm, k, '')
+            }
+            this.cfgForm.server_ids = []
+            this.$refs.cfgForm.clearValidate()
+            this.showDialog = false
+            this.projectOptions = []
+            this.serverOptions = []
+            this.jumperOptions = [{
+                label: '请选择',
+                value: 0
+            }]
+        },
+        async getSelVal() {
+            await getCfgSelectOptions().then((res) => {
+                for (let v of res.data['projects']) {
+                    this.projectOptions.push({
+                        label: v.project_name,
+                        value: v.project_id
+                    })
+                }
+                for (let v of res.data['servers']) {
+                    if (v.type === 1) { //目标机
+                        this.serverOptions.push({
+                            label: v.ssh_addr,
+                            value: v.server_id
+                        })
+                    } else {//跳板机
+                        this.jumperOptions.push({
+                            label: v.ssh_addr,
+                            value: v.server_id
+                        })
+                    }
+                }
+            }).catch(() => {
+            })
         }
     }
+}
 </script>

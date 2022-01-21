@@ -99,53 +99,53 @@
 </template>
 
 <script>
-    import tableInfo from "@/plugins/mixins/tableInfo";
-    import {delEnvCfg, getEnvCfgList} from "@/api/env_cfg";
-    import CfgEdit from "./cpns/CfgEdit";
+import tableInfo from "@/plugins/mixins/tableInfo";
+import {delEnvCfg, getEnvCfgList} from "@/api/env_cfg";
+import CfgEdit from "./cpns/CfgEdit";
 
-    export default {
-        name: "EnvConfig",
-        mixins: [tableInfo],
-        components: {CfgEdit},
-        created() {
-            this.getTableData()
+export default {
+    name: "EnvConfig",
+    mixins: [tableInfo],
+    components: {CfgEdit},
+    created() {
+        this.getTableData()
+    },
+    methods: {
+        getList: getEnvCfgList,
+        editCfg(row) {
+            this.$refs.cfgEditorFormDrawer.setEditVal(row)
         },
-        methods: {
-            getList: getEnvCfgList,
-            editCfg(row) {
-                this.$refs.cfgEditorFormDrawer.setEditVal(row)
-            },
-            async deleteCfg(row) {
-                this.$confirm('确认删除该配置吗, 此操作会删除项目对应所有发布记录?', '提示', {
-                    confirmButtonText: '确定',
-                    cancelButtonText: '取消',
-                    type: 'warning'
-                }).then(async () => {
-                    await delEnvCfg({cfg_id: row.env_id}).then((res) => {
-                        this.$message({
-                            type: 'success',
-                            message: res.msg
-                        })
-                        this.getTableData()
-                    }).catch(() => {
-                    })
-                }).catch(() => {
+        async deleteCfg(row) {
+            this.$confirm('确认删除该配置吗, 此操作会删除项目对应所有发布记录?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(async () => {
+                await delEnvCfg({cfg_id: row.env_id}).then((res) => {
                     this.$message({
-                        type: 'info',
-                        message: '已取消'
+                        type: 'success',
+                        message: res.msg
                     })
+                    this.getTableData()
+                }).catch(() => {
                 })
-            },
-            serversFormatter(r) {
-                return r['Servers'].reduce(function (o, n) {
-                    return o ? (o + "\n" + n.ssh_addr) : n.ssh_addr;
-                }, '')
-            },
-            jumperFormatter(r) {
-                return r['Jumper'].ssh_addr ? r['Jumper'].ssh_addr : '-'
-            }
+            }).catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: '已取消'
+                })
+            })
+        },
+        serversFormatter(r) {
+            return r['Servers'].reduce(function (o, n) {
+                return o ? (o + "\n" + n.ssh_addr) : n.ssh_addr;
+            }, '')
+        },
+        jumperFormatter(r) {
+            return r['Jumper'].ssh_addr ? r['Jumper'].ssh_addr : '-'
         }
     }
+}
 </script>
 
 <style scoped>

@@ -28,7 +28,7 @@
                 <template slot-scope="scope">
                     <span style="color: red; margin-right: 10px"
                           v-if="scope.row.uuid === scope.row.EnvCfg.uuid">☆</span>
-                    <span>{{scope.row.task_id}}</span>
+                    <span>{{ scope.row.task_id }}</span>
                 </template>
             </el-table-column>
             <el-table-column
@@ -38,9 +38,9 @@
                 <template slot-scope="scope">
                     <el-tooltip class="item" v-if="scope.row.description!==''" effect="dark"
                                 :content="scope.row.description" placement="top">
-                        <span>{{scope.row.task_name}}</span>
+                        <span>{{ scope.row.task_name }}</span>
                     </el-tooltip>
-                    <span v-else>{{scope.row.task_name}}</span>
+                    <span v-else>{{ scope.row.task_name }}</span>
                 </template>
             </el-table-column>
             <el-table-column
@@ -92,7 +92,7 @@
                                 width="800">
                         <TaskInfo :data="scope.row.output" :status="status"></TaskInfo>
                         <el-tag slot="reference" v-if="scope.row.status === 9"
-                                type="danger" size="mini">{{status[scope.row.status] }}
+                                type="danger" size="mini">{{ status[scope.row.status] }}
                         </el-tag>
                         <el-tag slot="reference" v-else type="success"
                                 size="mini">{{ status[scope.row.status] }}
@@ -145,215 +145,215 @@
 </template>
 
 <script>
-    import tableInfo from "@/plugins/mixins/tableInfo";
-    import TaskEdit from "./cpns/TaskEdit";
-    import TaskInfo from "./cpns/TaskInfo";
-    import ProcessInfo from "./cpns/ProcessInfo"
-    import {deleteTask, deployTask, getTaskList, rollBackTask} from "@/api/task";
-    import {InitWebSocket} from "@/utils/websocket";
+import tableInfo from "@/plugins/mixins/tableInfo";
+import TaskEdit from "./cpns/TaskEdit";
+import TaskInfo from "./cpns/TaskInfo";
+import ProcessInfo from "./cpns/ProcessInfo"
+import {deleteTask, deployTask, getTaskList, rollBackTask} from "@/api/task";
+import {InitWebSocket} from "@/utils/websocket";
 
-    export default {
-        name: "TaskList",
-        mixins: [tableInfo],
-        components: {TaskEdit, TaskInfo, ProcessInfo},
-        created() {
-            this.getTableData()
-        },
-        data() {
-            return {
-                dType: [
-                    {
-                        label: "增量",
-                        value: 1
-                    },
-                    {
-                        label: "全量",
-                        value: 2
-                    },
-                ],
-                status: {
-                    '1': '未开始',
-                    '2': '发布中',
-                    '8': '成功',
-                    '9': '失败'
+export default {
+    name: "TaskList",
+    mixins: [tableInfo],
+    components: {TaskEdit, TaskInfo, ProcessInfo},
+    created() {
+        this.getTableData()
+    },
+    data() {
+        return {
+            dType: [
+                {
+                    label: "增量",
+                    value: 1
                 },
-                direct: [   //直发公共
-                    {
-                        k: 'pack',
-                        v: '打包'
-                    },
-                ],
-                jumper: [   //跳发公共
-                    {
-                        k: 'pack',
-                        v: '打包'
-                    },
-                    {
-                        k: 'upload_jumper',
-                        v: '上传跳板'
-                    },
-                ],
-                server: [   //直发/跳发 非公共
-                    {
-                        k: 'upload_dst',
-                        v: '上传包'
-                    },
-                    {
-                        k: 'deploy',
-                        v: '发布'
-                    },
-                    {
-                        k: 'change_dir',
-                        v: '切目录'
-                    },
-                ],
-                taskProcess: {},
-                taskConnected: []
+                {
+                    label: "全量",
+                    value: 2
+                },
+            ],
+            status: {
+                '1': '未开始',
+                '2': '发布中',
+                '8': '成功',
+                '9': '失败'
+            },
+            direct: [   //直发公共
+                {
+                    k: 'pack',
+                    v: '打包'
+                },
+            ],
+            jumper: [   //跳发公共
+                {
+                    k: 'pack',
+                    v: '打包'
+                },
+                {
+                    k: 'upload_jumper',
+                    v: '上传跳板'
+                },
+            ],
+            server: [   //直发/跳发 非公共
+                {
+                    k: 'upload_dst',
+                    v: '上传包'
+                },
+                {
+                    k: 'deploy',
+                    v: '发布'
+                },
+                {
+                    k: 'change_dir',
+                    v: '切目录'
+                },
+            ],
+            taskProcess: {},
+            taskConnected: []
+        }
+    },
+    methods: {
+        getList: getTaskList,
+        async deployTask(row) {
+            this.$confirm('确定发布?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(async () => {
+                await deployTask({task_id: row.task_id}).then((res) => {
+                    this.$message({
+                        type: 'success',
+                        message: res.msg
+                    })
+                    this.getTableData()
+                }).catch(() => {
+                })
+            }).catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: '已取消'
+                })
+            })
+        },
+        editTask() {
+            this.$refs.taskEditorFormDrawer.setEditVal()
+        },
+        rollBackTask(row) {
+            this.$confirm('确认回滚到该工作目录?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(async () => {
+                await rollBackTask({task_id: row.task_id}).then((res) => {
+                    let isFail = Object.keys(res.data.error).length > 0
+                    this.$message({
+                        type: isFail ? 'error' : 'success',
+                        message: isFail ? '回滚失败(可能部分失败), 原因:' + JSON.stringify(res.data) : '回滚成功'
+                    })
+                    this.getTableData()
+                }).catch(() => {
+                })
+            }).catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: '已取消'
+                })
+            })
+        },
+        delTask(row) {
+            this.$confirm('确认删除该任务?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(async () => {
+                await deleteTask({task_id: row.task_id}).then((res) => {
+                    this.$message({
+                        type: 'success',
+                        message: res.msg
+                    })
+                    this.getTableData()
+                }).catch(() => {
+                })
+            }).catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: '已取消'
+                })
+            })
+        },
+        deployTypeFormatter(row) {
+            return this.dType.reduce((o, n) => {
+                return n.value === row.deploy_type ? n.label : o;
+            }, '')
+        },
+        getCommonProcess(row) {
+            if (row.EnvCfg.Jumper.server_id !== 0) {
+                return this.jumper
+            } else {
+                return this.direct
             }
         },
-        methods: {
-            getList: getTaskList,
-            async deployTask(row) {
-                this.$confirm('确定发布?', '提示', {
-                    confirmButtonText: '确定',
-                    cancelButtonText: '取消',
-                    type: 'warning'
-                }).then(async () => {
-                    await deployTask({task_id: row.task_id}).then((res) => {
-                        this.$message({
-                            type: 'success',
-                            message: res.msg
-                        })
-                        this.getTableData()
-                    }).catch(() => {
-                    })
-                }).catch(() => {
-                    this.$message({
-                        type: 'info',
-                        message: '已取消'
-                    })
-                })
-            },
-            editTask() {
-                this.$refs.taskEditorFormDrawer.setEditVal()
-            },
-            rollBackTask(row) {
-                this.$confirm('确认回滚到该工作目录?', '提示', {
-                    confirmButtonText: '确定',
-                    cancelButtonText: '取消',
-                    type: 'warning'
-                }).then(async () => {
-                    await rollBackTask({task_id: row.task_id}).then((res) => {
-                        let isFail = Object.keys(res.data.error).length > 0
-                        this.$message({
-                            type: isFail ? 'error' : 'success',
-                            message: isFail ? '回滚失败(可能部分失败), 原因:' + JSON.stringify(res.data) : '回滚成功'
-                        })
-                        this.getTableData()
-                    }).catch(() => {
-                    })
-                }).catch(() => {
-                    this.$message({
-                        type: 'info',
-                        message: '已取消'
-                    })
-                })
-            },
-            delTask(row) {
-                this.$confirm('确认删除该任务?', '提示', {
-                    confirmButtonText: '确定',
-                    cancelButtonText: '取消',
-                    type: 'warning'
-                }).then(async () => {
-                    await deleteTask({task_id: row.task_id}).then((res) => {
-                        this.$message({
-                            type: 'success',
-                            message: res.msg
-                        })
-                        this.getTableData()
-                    }).catch(() => {
-                    })
-                }).catch(() => {
-                    this.$message({
-                        type: 'info',
-                        message: '已取消'
-                    })
-                })
-            },
-            deployTypeFormatter(row) {
-                return this.dType.reduce((o, n) => {
-                    return n.value === row.deploy_type ? n.label : o;
-                }, '')
-            },
-            getCommonProcess(row) {
-                if (row.EnvCfg.Jumper.server_id !== 0) {
-                    return this.jumper
-                } else {
-                    return this.direct
+        connectWs(task_id) {
+            this.taskConnected.push(task_id)
+            InitWebSocket(task_id, async () => {
+                await this.getTableData()
+                this.$delete(this.taskProcess, task_id)
+                if (this.taskConnected.indexOf(task_id) !== -1) {
+                    this.taskConnected.splice(this.taskConnected.indexOf(task_id), 1)
                 }
-            },
-            connectWs(task_id) {
-                this.taskConnected.push(task_id)
-                InitWebSocket(task_id, async () => {
-                    await this.getTableData()
-                    this.$delete(this.taskProcess, task_id)
-                    if (this.taskConnected.indexOf(task_id) !== -1) {
-                        this.taskConnected.splice(this.taskConnected.indexOf(task_id), 1)
+            }, (d) => {
+                this.UpdateProcessBar(d)
+            })
+        },
+        UpdateProcessBar(resp) {
+            let _data = resp['data'], _comProcess = 1, _pStatus = 'success'
+            for (let v of this.jumper) {
+                if (_data[v.k] !== undefined) {
+                    if (_data[v.k] === 'success') {
+                        _comProcess++
+                    } else {
+                        _pStatus = 'error'
                     }
-                }, (d) => {
-                    this.UpdateProcessBar(d)
-                })
-            },
-            UpdateProcessBar(resp) {
-                let _data = resp['data'], _comProcess = 1, _pStatus = 'success'
-                for (let v of this.jumper) {
-                    if (_data[v.k] !== undefined) {
-                        if (_data[v.k] === 'success') {
-                            _comProcess++
+                }
+            }
+            this.taskProcess[resp.taskId]['now_step'] = _comProcess;
+            this.taskProcess[resp.taskId]['now_status'] = _pStatus;
+            for (let ip in _data['servers']) {
+                let _process = 0, _sStatus = 'success'
+                for (let _pk of this.server) {
+                    if (_data['servers'][ip][_pk.k] !== undefined) {
+                        if (_data['servers'][ip][_pk.k] === 'success') {
+                            _sStatus = 'process'
+                            _process++
                         } else {
-                            _pStatus = 'error'
+                            _sStatus = 'error'
                         }
                     }
                 }
-                this.taskProcess[resp.taskId]['now_step'] = _comProcess;
-                this.taskProcess[resp.taskId]['now_status'] = _pStatus;
-                for (let ip in _data['servers']) {
-                    let _process = 0, _sStatus = 'success'
-                    for (let _pk of this.server) {
-                        if (_data['servers'][ip][_pk.k] !== undefined) {
-                            if (_data['servers'][ip][_pk.k] === 'success') {
-                                _sStatus = 'process'
-                                _process++
-                            } else {
-                                _sStatus = 'error'
-                            }
-                        }
-                    }
-                    this.taskProcess[resp.taskId]['servers'][ip] = {
-                        now_step: _process,
-                        now_status: _sStatus
-                    }
+                this.taskProcess[resp.taskId]['servers'][ip] = {
+                    now_step: _process,
+                    now_status: _sStatus
                 }
-            },
-            afterUpdateList() {
-                this.tableData.map((t) => {
-                    if (t.status === 2 && this.taskConnected.indexOf(t.task_id) === -1) {
-                        this.$set(this.taskProcess, t.task_id, {})
-                        this.$set(this.taskProcess[t.task_id], 'now_step', 1)
-                        this.$set(this.taskProcess[t.task_id], 'now_status', 'process')
-                        this.$set(this.taskProcess[t.task_id], 'servers', {})
-                        for (let srv of t['EnvCfg']['Servers']) {
-                            this.$set(this.taskProcess[t.task_id]['servers'], srv['ssh_addr'], {
-                                now_step: 0,
-                                now_status: 'wait'
-                            })
-                        }
-                        this.connectWs(t.task_id)
-                    }
-                })
             }
         },
-    }
+        afterUpdateList() {
+            this.tableData.map((t) => {
+                if (t.status === 2 && this.taskConnected.indexOf(t.task_id) === -1) {
+                    this.$set(this.taskProcess, t.task_id, {})
+                    this.$set(this.taskProcess[t.task_id], 'now_step', 1)
+                    this.$set(this.taskProcess[t.task_id], 'now_status', 'process')
+                    this.$set(this.taskProcess[t.task_id], 'servers', {})
+                    for (let srv of t['EnvCfg']['Servers']) {
+                        this.$set(this.taskProcess[t.task_id]['servers'], srv['ssh_addr'], {
+                            now_step: 0,
+                            now_status: 'wait'
+                        })
+                    }
+                    this.connectWs(t.task_id)
+                }
+            })
+        }
+    },
+}
 </script>
 
 <style scoped>

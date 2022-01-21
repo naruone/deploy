@@ -34,7 +34,7 @@
                 label="项目信息">
                 <template slot-scope="scope">
                     <el-tooltip effect="dark" placement="top" :content="scope.row.repo_url">
-                        <span style="cursor: default">{{scope.row.project_name}}</span>
+                        <span style="cursor: default">{{ scope.row.project_name }}</span>
                     </el-tooltip>
                 </template>
             </el-table-column>
@@ -55,7 +55,7 @@
                     <el-tooltip v-if="scope.row.status === 3" effect="dark" placement="top-end">
                         <div slot="content">
                             失败原因:
-                            <pre>{{scope.row.err_msg}}</pre>
+                            <pre>{{ scope.row.err_msg }}</pre>
                         </div>
                         <el-tag type="danger" size="mini">{{ projectStatus(scope.row) }}</el-tag>
                     </el-tooltip>
@@ -102,101 +102,101 @@
 </template>
 
 <script>
-    import tableInfo from "@/plugins/mixins/tableInfo";
-    import {delProject, getProjectList, initProject} from "@/api/project"
-    import ProjectEdit from "./cpns/ProjectEdit";
+import tableInfo from "@/plugins/mixins/tableInfo";
+import {delProject, getProjectList, initProject} from "@/api/project"
+import ProjectEdit from "./cpns/ProjectEdit";
 
-    export default {
-        name: "Project",
-        mixins: [tableInfo],
-        data() {
-            return {
-                searchForm: {
-                    status: 0   //默认请选择
+export default {
+    name: "Project",
+    mixins: [tableInfo],
+    data() {
+        return {
+            searchForm: {
+                status: 0   //默认请选择
+            },
+            pStatus: [
+                {
+                    value: 0,
+                    label: '请选择'
                 },
-                pStatus: [
-                    {
-                        value: 0,
-                        label: '请选择'
-                    },
-                    {
-                        value: 1,
-                        label: '未开始'
-                    },
-                    {
-                        value: 2,
-                        label: '成功'
-                    },
-                    {
-                        value: 3,
-                        label: '失败'
-                    },
-                    {
-                        value: 9,
-                        label: '进行中'
-                    }
-                ],
-            }
+                {
+                    value: 1,
+                    label: '未开始'
+                },
+                {
+                    value: 2,
+                    label: '成功'
+                },
+                {
+                    value: 3,
+                    label: '失败'
+                },
+                {
+                    value: 9,
+                    label: '进行中'
+                }
+            ],
+        }
+    },
+    created() {
+        this.getTableData()
+    },
+    components: {
+        ProjectEdit
+    },
+    methods: {
+        getList: getProjectList,
+        projectStatus(c) {
+            return this.pStatus.reduce((o, v) => {
+                if (o !== '') return o
+                return c.status === v.value ? v.label : ''
+            }, '')
         },
-        created() {
-            this.getTableData()
-        },
-        components: {
-            ProjectEdit
-        },
-        methods: {
-            getList: getProjectList,
-            projectStatus(c) {
-                return this.pStatus.reduce((o, v) => {
-                    if (o !== '') return o
-                    return c.status === v.value ? v.label : ''
-                }, '')
-            },
-            async initProject(row) {
-                this.$confirm('确认初始化该项目?', '提示', {
-                    confirmButtonText: '确定',
-                    cancelButtonText: '取消',
-                    type: 'warning'
-                }).then(async () => {
-                    const res = await initProject({project_id: row.project_id})
-                    if (res.code === 0) {
-                        this.$message({
-                            type: 'success',
-                            message: res.msg
-                        })
-                        await this.getTableData()
-                    }
-                }).catch(() => {
+        async initProject(row) {
+            this.$confirm('确认初始化该项目?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(async () => {
+                const res = await initProject({project_id: row.project_id})
+                if (res.code === 0) {
                     this.$message({
-                        type: 'info',
-                        message: '已取消'
+                        type: 'success',
+                        message: res.msg
                     })
+                    await this.getTableData()
+                }
+            }).catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: '已取消'
                 })
-            },
-            async deleteProject(row) {
-                this.$confirm('确认删除该项目, 此操作会删除对应的环境配置和已存在的发布任务?', '提示', {
-                    confirmButtonText: '确定',
-                    cancelButtonText: '取消',
-                    type: 'warning'
-                }).then(async () => {
-                    await delProject({project_id: row.project_id}).then((res) => {
-                        this.$message({
-                            type: 'success',
-                            message: res.msg
-                        })
-                        this.getTableData()
-                    }).catch(() => {
-                    })
-                }).catch(() => {
-                    this.$message({
-                        type: 'info',
-                        message: '已取消'
-                    })
-                })
-            },
-            editProject(row) {
-                this.$refs.projectEditFormDrawer.setEditVal(row)
-            }
+            })
         },
-    }
+        async deleteProject(row) {
+            this.$confirm('确认删除该项目, 此操作会删除对应的环境配置和已存在的发布任务?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(async () => {
+                await delProject({project_id: row.project_id}).then((res) => {
+                    this.$message({
+                        type: 'success',
+                        message: res.msg
+                    })
+                    this.getTableData()
+                }).catch(() => {
+                })
+            }).catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: '已取消'
+                })
+            })
+        },
+        editProject(row) {
+            this.$refs.projectEditFormDrawer.setEditVal(row)
+        }
+    },
+}
 </script>

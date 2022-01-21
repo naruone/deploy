@@ -23,26 +23,26 @@
         </div>
         <el-table :data="tableData" border style="width: 100%">
             <el-table-column
-                    prop="user_id"
-                    label="ID"
-                    width="120">
+                prop="user_id"
+                label="ID"
+                width="120">
             </el-table-column>
             <el-table-column
-                    prop="user_name"
-                    label="登录名"
-                    width="180">
+                prop="user_name"
+                label="登录名"
+                width="180">
             </el-table-column>
             <el-table-column
-                    prop="nick_name"
-                    label="用户昵称">
+                prop="nick_name"
+                label="用户昵称">
             </el-table-column>
             <el-table-column
-                    :formatter="userStatus"
-                    label="用户状态">
+                :formatter="userStatus"
+                label="用户状态">
             </el-table-column>
             <el-table-column
-                    prop="create_at"
-                    label="创建时间">
+                prop="create_at"
+                label="创建时间">
             </el-table-column>
             <el-table-column align="center" label="操作">
                 <template slot-scope="scope">
@@ -65,13 +65,13 @@
         </el-table>
         <div class="page-content">
             <el-pagination
-                    @size-change="handleSizeChange"
-                    @current-change="handleCurrentChange"
-                    :current-page="currentPage"
-                    :page-sizes="[10, 20, 50, 100]"
-                    :page-size="pageSize"
-                    layout="total, sizes, prev, pager, next, jumper"
-                    :total="total">
+                @size-change="handleSizeChange"
+                @current-change="handleCurrentChange"
+                :current-page="currentPage"
+                :page-sizes="[10, 20, 50, 100]"
+                :page-size="pageSize"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="total">
             </el-pagination>
         </div>
 
@@ -101,111 +101,111 @@
 </template>
 
 <script>
-    import tableInfo from '@/plugins/mixins/tableInfo'
-    import {getUserList, saveUser, setUserStatus} from "@/api/user";
+import tableInfo from '@/plugins/mixins/tableInfo'
+import {getUserList, saveUser, setUserStatus} from "@/api/user";
 
-    export default {
-        name: "UserList",
-        mixins: [tableInfo],
-        data() {
-            return {
-                userEditFormShow: false,
-                userForm: {
-                    user_id: 0,
-                    user_name: '',
-                    password: '',
-                    nick_name: ''
-                },
-                userFormRule: {
-                    user_name: [
-                        {required: true, message: '请输入用户名', trigger: 'blur'},
-                        {min: 3, max: 18, message: '长度在3到18个字符', trigger: 'blur'}
-                    ],
-                    password: [
-                        {message: '请输入密码', trigger: 'blur'},
-                        {min: 3, max: 18, message: '长度在3到18个字符', trigger: 'blur'}
-                    ],
-                    nick_name: [
-                        {required: true, type: "string", min: 3, max: 20, message: "请输入昵称", trigger: 'blur'}
-                    ]
-                },
-                uStatus: [
-                    {
-                        value: 1,
-                        label: '正常'
-                    },
-                    {
-                        value: 2,
-                        label: '禁用'
-                    }
+export default {
+    name: "UserList",
+    mixins: [tableInfo],
+    data() {
+        return {
+            userEditFormShow: false,
+            userForm: {
+                user_id: 0,
+                user_name: '',
+                password: '',
+                nick_name: ''
+            },
+            userFormRule: {
+                user_name: [
+                    {required: true, message: '请输入用户名', trigger: 'blur'},
+                    {min: 3, max: 18, message: '长度在3到18个字符', trigger: 'blur'}
                 ],
-                searchForm: {
-                    status: 1   //默认查状态正常的用户
+                password: [
+                    {message: '请输入密码', trigger: 'blur'},
+                    {min: 3, max: 18, message: '长度在3到18个字符', trigger: 'blur'}
+                ],
+                nick_name: [
+                    {required: true, type: "string", min: 3, max: 20, message: "请输入昵称", trigger: 'blur'}
+                ]
+            },
+            uStatus: [
+                {
+                    value: 1,
+                    label: '正常'
+                },
+                {
+                    value: 2,
+                    label: '禁用'
                 }
-            }
-        },
-        created() {
-            this.getTableData()
-        },
-        methods: {
-            getList: getUserList,
-            userStatus(c) { //状态展示
-                return this.uStatus.reduce((o, v) => {
-                    if (o !== '') return o
-                    return c.status === v.value ? v.label : ''
-                }, '')
-            },
-            setUserStatus(row, status) {
-                this.$confirm('确定此操作?', '提示', {
-                    confirmButtonText: '确定',
-                    cancelButtonText: '取消',
-                    type: 'warning'
-                }).then(async () => {
-                    await setUserStatus({
-                        user_id: row.user_id,
-                        status: status
-                    }).then((res) => {
-                        this.$message({
-                            type: 'success',
-                            message: res.msg
-                        })
-                        this.getTableData()
-                    }).catch(() => {
-                    })
-                }, () => {
-                    this.$message({
-                        type: 'info',
-                        message: '已取消'
-                    })
-                })
-            },
-            userSave() {
-                this.$refs.uForm.validate(async (valid) => {
-                    if (valid) {
-                        await saveUser(this.userForm).then((res) => {
-                            this.$message({
-                                type: 'success',
-                                message: res.msg,
-                                showClose: true
-                            });
-                            this.getTableData()
-                            this.userEditFormShow = false
-                        }).catch(() => {
-                        })
-                    }
-                })
-            },
-            showUserEdit(row) {
-                row.password = ""
-                for (let k in this.userForm) {
-                    this.$set(this.userForm, k, row[k] ? row[k] : '')
-                }
-                this.userEditFormShow = true
-            },
-            handleClose() {
-                this.$refs.uForm.clearValidate()
-                this.userEditFormShow = false
+            ],
+            searchForm: {
+                status: 1   //默认查状态正常的用户
             }
         }
+    },
+    created() {
+        this.getTableData()
+    },
+    methods: {
+        getList: getUserList,
+        userStatus(c) { //状态展示
+            return this.uStatus.reduce((o, v) => {
+                if (o !== '') return o
+                return c.status === v.value ? v.label : ''
+            }, '')
+        },
+        setUserStatus(row, status) {
+            this.$confirm('确定此操作?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(async () => {
+                await setUserStatus({
+                    user_id: row.user_id,
+                    status: status
+                }).then((res) => {
+                    this.$message({
+                        type: 'success',
+                        message: res.msg
+                    })
+                    this.getTableData()
+                }).catch(() => {
+                })
+            }, () => {
+                this.$message({
+                    type: 'info',
+                    message: '已取消'
+                })
+            })
+        },
+        userSave() {
+            this.$refs.uForm.validate(async (valid) => {
+                if (valid) {
+                    await saveUser(this.userForm).then((res) => {
+                        this.$message({
+                            type: 'success',
+                            message: res.msg,
+                            showClose: true
+                        });
+                        this.getTableData()
+                        this.userEditFormShow = false
+                    }).catch(() => {
+                    })
+                }
+            })
+        },
+        showUserEdit(row) {
+            row.password = ""
+            for (let k in this.userForm) {
+                this.$set(this.userForm, k, row[k] ? row[k] : '')
+            }
+            this.userEditFormShow = true
+        },
+        handleClose() {
+            this.$refs.uForm.clearValidate()
+            this.userEditFormShow = false
+        }
     }
+}
 </script>

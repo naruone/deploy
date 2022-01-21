@@ -12,7 +12,7 @@
                 <span class="el-dropdown-link">
                     <span class="el-dropdown-link">
                     <img src="../../../assets/images/avatar.png" height="30" width="30"/>
-                    {{$store.getters['user/userInfo'].nick_name}}
+                    {{ $store.getters['user/userInfo'].nick_name }}
                     <i class="el-icon-arrow-down"></i>
                   </span>
                 </span>
@@ -27,77 +27,77 @@
 </template>
 
 <script>
-    import {mapActions} from "vuex";
+import {mapActions} from "vuex";
 
-    export default {
-        name: "Header",
-        props: {
-            isCollapse: {
-                type: Boolean,
-                default: false
+export default {
+    name: "Header",
+    props: {
+        isCollapse: {
+            type: Boolean,
+            default: false
+        }
+    },
+    methods: {
+        ...mapActions('user', ['LoginOut']),
+        triggerCollapse() {
+            this.$emit('triggerCollapse', !this.isCollapse)
+        },
+        goHome() {
+            if (this.$route.name !== 'sys') {
+                this.$router.push({name: 'sys'});
             }
         },
-        methods: {
-            ...mapActions('user', ['LoginOut']),
-            triggerCollapse() {
-                this.$emit('triggerCollapse', !this.isCollapse)
-            },
-            goHome() {
-                if (this.$route.name !== 'sys') {
-                    this.$router.push({name: 'sys'});
-                }
-            },
-            showModifyPwd() {
-                this.$emit("showMdyPwd")
-            },
-        }
+        showModifyPwd() {
+            this.$emit("showMdyPwd")
+        },
     }
+}
 </script>
 
 <style scoped>
-    .deploy-header {
-        height: 60px;
-        display: flex;
-    }
+.deploy-header {
+    height: 60px;
+    display: flex;
+}
 
-    .deploy-header > .title {
-        width: 200px;
-        display: inline-flex;
-        font-size: 1.2em;
-        line-height: 60px;
-        color: #555;
-    }
+.deploy-header > .title {
+    width: 200px;
+    display: inline-flex;
+    font-size: 1.2em;
+    line-height: 60px;
+    color: #555;
+}
 
-    .deploy-header > .title {
-        height: 50%;
-        cursor: pointer;
-    }
+.deploy-header > .title {
+    height: 50%;
+    cursor: pointer;
+}
 
-    .deploy-header > .title > i {
-        margin-top: 18px;
-        margin-right: 5px;
-    }
+.deploy-header > .title > i {
+    margin-top: 18px;
+    margin-right: 5px;
+}
 
-    .menu-trigger {
-        display: inline-flex;
-        font-size: 1.5em;
-        margin-top: 13px;
-    }
+.menu-trigger {
+    display: inline-flex;
+    font-size: 1.5em;
+    margin-top: 13px;
+}
 
-    .user-menu {
-        margin: 12px 25px auto auto;
-    }
+.user-menu {
+    margin: 12px 25px auto auto;
+}
 
-    .user-menu .el-dropdown-link {
-        text-align: center;
-        vertical-align: middle;
-        cursor: default;
-    }
+.user-menu .el-dropdown-link {
+    text-align: center;
+    vertical-align: middle;
+    cursor: default;
+}
 
-    .user-menu .el-dropdown-link img {
-        vertical-align: middle;
-        border: 1px solid #ccc;
-        border-radius: 15px;
-    }
+.user-menu .el-dropdown-link img {
+    vertical-align: middle;
+    border: 1px solid #ccc;
+    border-radius: 15px;
+}
 
 </style>

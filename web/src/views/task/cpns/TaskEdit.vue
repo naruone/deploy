@@ -18,7 +18,7 @@
                 </el-form-item>
                 <el-form-item label="发布类型" prop="deploy_type">
                     <el-radio-group v-model="taskForm.deploy_type">
-                        <el-radio v-for="v in dType" :label="v.value">{{v.label}}</el-radio>
+                        <el-radio v-for="v in dType" :key="v.value" :label="v.value">{{ v.label }}</el-radio>
                     </el-radio-group>
                 </el-form-item>
                 <el-form-item label="分支" prop="branch">
@@ -48,126 +48,126 @@
 </template>
 
 <script>
-    import {getBranches, getEnvOptions, getVersions, saveTask} from "@/api/task";
+import {getBranches, getEnvOptions, getVersions, saveTask} from "@/api/task";
 
-    export default {
-        name: "TaskEdit",
-        props: {
-            dType: {
-                required: true,
-                type: Array
-            }
-        },
-        data() {
-            return {
-                showDialog: false,
-                taskForm: {
-                    task_id: 0,
-                    task_name: '',
-                    env_id: '',
-                    deploy_type: 1,
-                    branch: '',
-                    version: '',
-                    description: '',
-                    after_script: '',
-                },
-                taskRules: {
-                    task_name: [
-                        {required: true, message: '任务名称必填', trigger: 'blur'},
-                        {min: 3, max: 200, message: '长度在3到200个字符', trigger: 'blur'}
-                    ],
-                    env_id: [
-                        {required: true, message: '环境必选', trigger: 'change'},
-                    ],
-                    deploy_type: [
-                        {required: true, message: '类型必选', trigger: 'blur'},
-                    ],
-                    branch: [
-                        {required: true, message: '分支必选', trigger: 'blur'},
-                    ],
-                    version: [
-                        {required: true, message: '版本必选', trigger: 'blur'},
-                    ],
-                    description: [
-                        {max: 2000, message: '长度小于2000个字符', trigger: 'blur'}
-                    ],
-                    after_script: [
-                        {max: 2000, message: '长度小于2000个字符', trigger: 'blur'}
-                    ]
-                },
-                envOptions: [],
-                branchOptions: [],
-                versionOptions: []
-            }
-        },
-        watch: {
-            showDialog(n) {
-                if (n) this.getSelVal()
-            }
-        },
-        methods: {
-            taskSave() {
-                this.$refs.taskForm.validate(async (valid) => {
-                    if (valid) {
-                        await saveTask(this.taskForm).then((res) => {
-                            this.$message({
-                                type: 'success',
-                                message: res.msg,
-                                showClose: true
-                            });
-                            this.$parent.getTableData()
-                            this.handleClose()
-                        }).catch((_) => {
-                        })
-                    }
-                })
+export default {
+    name: "TaskEdit",
+    props: {
+        dType: {
+            required: true,
+            type: Array
+        }
+    },
+    data() {
+        return {
+            showDialog: false,
+            taskForm: {
+                task_id: 0,
+                task_name: '',
+                env_id: '',
+                deploy_type: 1,
+                branch: '',
+                version: '',
+                description: '',
+                after_script: '',
             },
-            setEditVal() {
-                this.showDialog = true
+            taskRules: {
+                task_name: [
+                    {required: true, message: '任务名称必填', trigger: 'blur'},
+                    {min: 3, max: 200, message: '长度在3到200个字符', trigger: 'blur'}
+                ],
+                env_id: [
+                    {required: true, message: '环境必选', trigger: 'change'},
+                ],
+                deploy_type: [
+                    {required: true, message: '类型必选', trigger: 'blur'},
+                ],
+                branch: [
+                    {required: true, message: '分支必选', trigger: 'blur'},
+                ],
+                version: [
+                    {required: true, message: '版本必选', trigger: 'blur'},
+                ],
+                description: [
+                    {max: 2000, message: '长度小于2000个字符', trigger: 'blur'}
+                ],
+                after_script: [
+                    {max: 2000, message: '长度小于2000个字符', trigger: 'blur'}
+                ]
             },
-            handleClose() {
-                for (let k in this.taskForm) {
-                    this.$set(this.taskForm, k, '')
+            envOptions: [],
+            branchOptions: [],
+            versionOptions: []
+        }
+    },
+    watch: {
+        showDialog(n) {
+            if (n) this.getSelVal()
+        }
+    },
+    methods: {
+        taskSave() {
+            this.$refs.taskForm.validate(async (valid) => {
+                if (valid) {
+                    await saveTask(this.taskForm).then((res) => {
+                        this.$message({
+                            type: 'success',
+                            message: res.msg,
+                            showClose: true
+                        });
+                        this.$parent.getTableData()
+                        this.handleClose()
+                    }).catch((_) => {
+                    })
                 }
-                this.taskForm.deploy_type = 1
-                this.$refs.taskForm.clearValidate()
-                this.envOptions = []
-                this.branchOptions = []
-                this.versionOptions = []
-                this.showDialog = false
-            },
-            async getSelVal() {
-                await getEnvOptions().then((res) => {
-                    for (let v of res.data.envList) {
-                        this.envOptions.push({
-                            label: v.env_name,
-                            value: v.env_id,
-                            info: v
-                        })
-                    }
-                }).catch(() => {
-                })
-            },
-            async loadBranch(envId) {
-                this.taskForm.branch = ''
-                this.taskForm.version = ''
-                let envObj = this.envOptions.reduce((o, n) => {
-                    return n.value === envId ? n.info : o
-                }, '')
-                await getBranches({project_id: envObj.project_id}).then((res) => {
-                    this.branchOptions = res.data
-                }).catch(() => {
-                })
-            },
-            async loadVersion(envId, branch) {
-                let envObj = this.envOptions.reduce((o, n) => {
-                    return n.value === envId ? n.info : o
-                }, '')
-                await getVersions({project_id: envObj.project_id, branch: branch}).then((res) => {
-                    this.versionOptions = res.data
-                }).catch(() => {
-                })
+            })
+        },
+        setEditVal() {
+            this.showDialog = true
+        },
+        handleClose() {
+            for (let k in this.taskForm) {
+                this.$set(this.taskForm, k, '')
             }
+            this.taskForm.deploy_type = 1
+            this.$refs.taskForm.clearValidate()
+            this.envOptions = []
+            this.branchOptions = []
+            this.versionOptions = []
+            this.showDialog = false
+        },
+        async getSelVal() {
+            await getEnvOptions().then((res) => {
+                for (let v of res.data.envList) {
+                    this.envOptions.push({
+                        label: v.env_name,
+                        value: v.env_id,
+                        info: v
+                    })
+                }
+            }).catch(() => {
+            })
+        },
+        async loadBranch(envId) {
+            this.taskForm.branch = ''
+            this.taskForm.version = ''
+            let envObj = this.envOptions.reduce((o, n) => {
+                return n.value === envId ? n.info : o
+            }, '')
+            await getBranches({project_id: envObj.project_id}).then((res) => {
+                this.branchOptions = res.data
+            }).catch(() => {
+            })
+        },
+        async loadVersion(envId, branch) {
+            let envObj = this.envOptions.reduce((o, n) => {
+                return n.value === envId ? n.info : o
+            }, '')
+            await getVersions({project_id: envObj.project_id, branch: branch}).then((res) => {
+                this.versionOptions = res.data
+            }).catch(() => {
+            })
         }
     }
+}
 </script>

@@ -81,68 +81,68 @@
 </template>
 
 <script>
-    import tableInfo from "@/plugins/mixins/tableInfo";
-    import ServerEdit from "./cpns/ServerEdit";
-    import {delServer, getServerList} from "@/api/server";
+import tableInfo from "@/plugins/mixins/tableInfo";
+import ServerEdit from "./cpns/ServerEdit";
+import {delServer, getServerList} from "@/api/server";
 
-    export default {
-        name: "ServerList",
-        mixins: [tableInfo],
-        components: {ServerEdit},
-        data() {
-            return {
-                searchForm: {
-                    type: ''
+export default {
+    name: "ServerList",
+    mixins: [tableInfo],
+    components: {ServerEdit},
+    data() {
+        return {
+            searchForm: {
+                type: ''
+            },
+            sType: [
+                {
+                    value: 1,
+                    label: '目标机'
                 },
-                sType: [
-                    {
-                        value: 1,
-                        label: '目标机'
-                    },
-                    {
-                        value: 2,
-                        label: '跳板机'
-                    },
-                ],
-            }
-        },
-        created() {
-            this.getTableData()
-        },
-        methods: {
-            getList: getServerList,
-            editServer(row) {
-                this.$refs.serverEditFromDrawer.setEditVal(row)
-            },
-            async deleteServer(row) {
-                this.$confirm('确认删除该服务器, 请先确保使用到本服务器的任务已被删除?', '提示', {
-                    confirmButtonText: '确定',
-                    cancelButtonText: '取消',
-                    type: 'warning'
-                }).then(async () => {
-                    await delServer({server_id: row.server_id}).then((res) => {
-                        this.$message({
-                            type: 'success',
-                            message: res.msg
-                        })
-                        this.getTableData()
-                    }).catch(() => {
-                    })
-                }).catch(() => {
-                    this.$message({
-                        type: 'info',
-                        message: '已取消'
-                    })
-                })
-            },
-            serverType(c) {
-                return this.sType.reduce((o, v) => {
-                    if (o !== '') return o
-                    return c.type === v.value ? v.label : ''
-                }, '')
-            },
+                {
+                    value: 2,
+                    label: '跳板机'
+                },
+            ],
         }
+    },
+    created() {
+        this.getTableData()
+    },
+    methods: {
+        getList: getServerList,
+        editServer(row) {
+            this.$refs.serverEditFromDrawer.setEditVal(row)
+        },
+        async deleteServer(row) {
+            this.$confirm('确认删除该服务器, 请先确保使用到本服务器的任务已被删除?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(async () => {
+                await delServer({server_id: row.server_id}).then((res) => {
+                    this.$message({
+                        type: 'success',
+                        message: res.msg
+                    })
+                    this.getTableData()
+                }).catch(() => {
+                })
+            }).catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: '已取消'
+                })
+            })
+        },
+        serverType(c) {
+            return this.sType.reduce((o, v) => {
+                if (o !== '') return o
+                return c.type === v.value ? v.label : ''
+            }, '')
+        },
     }
+}
 </script>
 
 <style scoped>

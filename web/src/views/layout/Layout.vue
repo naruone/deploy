@@ -41,109 +41,109 @@
 </template>
 
 <script>
-    import Aside from "./cpns/Aside";
-    import Header from "./cpns/Header";
-    import BreadCrumb from "./cpns/BreadCrumb";
-    import {modifyPwd} from "@/api/user";
+import Aside from "./cpns/Aside";
+import Header from "./cpns/Header";
+import BreadCrumb from "./cpns/BreadCrumb";
+import {modifyPwd} from "@/api/user";
 
-    export default {
-        name: "Layout",
-        components: {
-            Aside, Header, BreadCrumb
-        },
-        data() {
-            return {
-                isCollapse: false,
-                mdyPwdShow: false,
-                pwdForm: {
-                    old_pwd: '',
-                    new_pwd: '',
-                    c_new_pwd: ''
-                },
-                pwdFormRule: {
-                    old_pwd: [
-                        {required: true, message: '请输入原密码', trigger: 'blur'},
-                        {min: 6, max: 18, message: '长度在6到18个字符', trigger: 'blur'}
-                    ],
-                    new_pwd: [
-                        {required: true, message: '请输入新密码', trigger: 'blur'},
-                        {min: 6, max: 18, message: '长度在6到18个字符', trigger: 'blur'}
-                    ],
-                    c_new_pwd: [
-                        {required: true, type: "string", message: "请输入确认密码", trigger: 'blur'},
-                        {
-                            validator: (rule, value, callback) => {
-                                if (value !== this.pwdForm.new_pwd) {
-                                    return callback(new Error('确认密码不对'));
-                                }
-                                callback()
-                            }, trigger: 'blur'
-                        }
-                    ]
-                }
-            }
-        },
-        methods: {
-            triggerMainCollapse(status) {
-                this.isCollapse = status
+export default {
+    name: "Layout",
+    components: {
+        Aside, Header, BreadCrumb
+    },
+    data() {
+        return {
+            isCollapse: false,
+            mdyPwdShow: false,
+            pwdForm: {
+                old_pwd: '',
+                new_pwd: '',
+                c_new_pwd: ''
             },
-            modifyPwd() {
-                this.$refs.modifyPwdForm.validate(async (valid) => {
-                    if (valid) {
-                        await modifyPwd(this.pwdForm).then((res) => {
-                            this.$message({
-                                type: 'success',
-                                message: res.msg,
-                                showClose: true
-                            });
-                            this.mdyPwdShow = false
-                        }).catch(() => {
-                        })
+            pwdFormRule: {
+                old_pwd: [
+                    {required: true, message: '请输入原密码', trigger: 'blur'},
+                    {min: 6, max: 18, message: '长度在6到18个字符', trigger: 'blur'}
+                ],
+                new_pwd: [
+                    {required: true, message: '请输入新密码', trigger: 'blur'},
+                    {min: 6, max: 18, message: '长度在6到18个字符', trigger: 'blur'}
+                ],
+                c_new_pwd: [
+                    {required: true, type: "string", message: "请输入确认密码", trigger: 'blur'},
+                    {
+                        validator: (rule, value, callback) => {
+                            if (value !== this.pwdForm.new_pwd) {
+                                return callback(new Error('确认密码不对'));
+                            }
+                            callback()
+                        }, trigger: 'blur'
                     }
-                })
-            },
-            clearPwd() {
-                this.pwdForm = {
-                    old_pwd: '',
-                    new_pwd: '',
-                    c_new_pwd: ''
-                }
-                this.$refs.modifyPwdForm.clearValidate()
-            },
+                ]
+            }
         }
+    },
+    methods: {
+        triggerMainCollapse(status) {
+            this.isCollapse = status
+        },
+        modifyPwd() {
+            this.$refs.modifyPwdForm.validate(async (valid) => {
+                if (valid) {
+                    await modifyPwd(this.pwdForm).then((res) => {
+                        this.$message({
+                            type: 'success',
+                            message: res.msg,
+                            showClose: true
+                        });
+                        this.mdyPwdShow = false
+                    }).catch(() => {
+                    })
+                }
+            })
+        },
+        clearPwd() {
+            this.pwdForm = {
+                old_pwd: '',
+                new_pwd: '',
+                c_new_pwd: ''
+            }
+            this.$refs.modifyPwdForm.clearValidate()
+        },
     }
+}
 </script>
 
 <style scoped>
-    .el-container {
-        height: 100vh;
-        width: 100vw;
-    }
+.el-container {
+    height: 100vh;
+    width: 100vw;
+}
 
-    .el-header {
-        background-color: #ffffff;
-        box-shadow: 0 1px 1px #CCC;
-        z-index: 2;
-    }
+.el-header {
+    background-color: #ffffff;
+    box-shadow: 0 1px 1px #CCC;
+    z-index: 2;
+}
 
-    .el-main {
-        background-color: #f0f2f5;
-        padding: 12px;
-    }
+.el-main {
+    background-color: #f0f2f5;
+    padding: 12px;
+}
 
-    .el-main > .main-breadcrumb {
-        background-color: #ffffff;
-        padding: 15px;
-        border-radius: 3px 3px 0 0;
-        border-bottom: #eeeeee solid 1px;
-        box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1)
-    }
+.el-main > .main-breadcrumb {
+    background-color: #ffffff;
+    padding: 15px;
+    border-radius: 3px 3px 0 0;
+    border-bottom: #eeeeee solid 1px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1)
+}
 
-    .el-main > .main-content {
-        min-height: 300px;
-        background-color: #FFF;
-        padding: 15px 15px 60px 15px;
-        border-top: 3px double #EEE;
-        box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-    }
+.el-main > .main-content {
+    min-height: 300px;
+    background-color: #FFF;
+    padding: 15px 15px 60px 15px;
+    border-top: 3px double #EEE;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+}
 </style>
