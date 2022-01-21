@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import {store} from "../store";
+import {store} from "@/store";
 /**
  *  导入子模块路由
  *  !!! 路由name 不要用中划线命名, 菜单输出时用了-作为分隔符

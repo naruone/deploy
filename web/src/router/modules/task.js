@@ -7,7 +7,7 @@ const taskRouter = {
     component: Layout,
     redirect: '/task/taskList',
     meta: {
-        title: '任务管理',
+        title: '发布管理',
         icon: 'el-icon-set-up'
     },
     children: [
@@ -15,7 +15,7 @@ const taskRouter = {
             path: "taskList",
             name: 'taskList',
             meta: {
-                title: '任务列表'
+                title: '发布列表'
             },
             component: () => import('../../views/task/TaskList')
         },
