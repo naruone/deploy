@@ -26,9 +26,9 @@
                 label="ID"
                 width="60">
                 <template slot-scope="scope">
-                    <span style="display: none"></span> <!-- 解决当下一行判断为false导致当前template不渲染的bug -->
                     <span style="color: red; margin-right: 10px"
                           v-if="scope.row.uuid === scope.row.EnvCfg.uuid">☆</span>
+                    <span v-else></span><!-- 解决当下一行判断为false导致当前template不渲染的bug -->
                     <span>{{ scope.row.task_id }}</span>
                 </template>
             </el-table-column>
@@ -113,11 +113,11 @@
             </el-table-column>
             <el-table-column align="center" width="120" fixed="right" label="操作">
                 <template slot-scope="scope">
-                    <span style="display: none"></span> <!-- 解决当下一行判断为false导致当前template不渲染的bug -->
                     <el-tooltip v-if="scope.row.status === 1" content="发布" placement="top" effect="dark">
                         <el-button @click="deployTask(scope.row)" type="primary" icon="el-icon-upload"
                                    circle></el-button>
                     </el-tooltip>
+                    <span v-else></span><!-- 解决当下一行判断为false导致当前template不渲染的bug -->
                     <el-button v-if="scope.row.status === 1 || scope.row.status === 9" type="danger"
                                icon="el-icon-delete" circle
                                @click="delTask(scope.row)"
