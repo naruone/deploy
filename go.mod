@@ -18,7 +18,7 @@ require (
 	github.com/pkg/sftp v1.11.0
 	github.com/satori/go.uuid v1.2.0
 	golang.org/x/crypto v0.0.0-20191205180655-e7c4368fe9dd
-	golang.org/x/sys v0.0.0-20200610111108-226ff32320da // indirect
+	golang.org/x/sys v0.0.0-20220728004956-3c1f35247d10 // indirect
 	google.golang.org/appengine v1.6.5 // indirect
 	google.golang.org/protobuf v1.24.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
