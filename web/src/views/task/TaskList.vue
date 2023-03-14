@@ -24,7 +24,7 @@
                 prop="task_id"
                 fixed
                 label="ID"
-                width="60">
+                width="80">
                 <template slot-scope="scope">
                     <span style="color: red; margin-right: 10px"
                           v-if="scope.row.uuid === scope.row.EnvCfg.uuid">☆</span>
