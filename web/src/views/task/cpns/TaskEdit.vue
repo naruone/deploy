@@ -163,6 +163,7 @@ export default {
             let envObj = this.envOptions.reduce((o, n) => {
                 return n.value === envId ? n.info : o
             }, '')
+            this.taskForm.version = ''
             await getVersions({project_id: envObj.project_id, branch: branch}).then((res) => {
                 this.versionOptions = res.data
             }).catch(() => {
