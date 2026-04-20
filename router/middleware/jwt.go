@@ -110,7 +110,7 @@ func SignToken(userModel *model.User) (int64, string, error) {
         ID:       userModel.UserId,
         NickName: userModel.NickName,
         RegisteredClaims: jwt.RegisteredClaims{
-            NotBefore: jwt.NewNumericDate(now),                          // 签名生效时间
+            NotBefore: jwt.NewNumericDate(now.Add(-time.Second)),        // 签名生效时间
             ExpiresAt: jwt.NewNumericDate(expiresAt),                    // 过期时间一周
             Issuer:    "chao-da-ye",                  // 签名的发行者
         },
