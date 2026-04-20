@@ -103,10 +103,13 @@ func SignToken(userModel *model.User) (int64, string, error) {
         myJwt     *JWT
         tokenSign *jwt.Token
     )
-    const clockSkewTolerance = time.Second
+    const (
+        clockSkewTolerance = 30 * time.Second
+        tokenTTL           = 7 * 24 * time.Hour
+    )
     myJwt = NewJWT()
     now := time.Now()
-    expiresAt := now.Add(24 * time.Hour * 7)
+    expiresAt := now.Add(tokenTTL)
     claims := request.CustomClaims{
         ID:       userModel.UserId,
         NickName: userModel.NickName,
