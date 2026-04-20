@@ -103,6 +103,7 @@ func SignToken(userModel *model.User) (int64, string, error) {
         myJwt     *JWT
         tokenSign *jwt.Token
     )
+    const clockSkewTolerance = time.Second
     myJwt = NewJWT()
     now := time.Now()
     expiresAt := now.Add(24 * time.Hour * 7)
@@ -110,7 +111,7 @@ func SignToken(userModel *model.User) (int64, string, error) {
         ID:       userModel.UserId,
         NickName: userModel.NickName,
         RegisteredClaims: jwt.RegisteredClaims{
-            NotBefore: jwt.NewNumericDate(now.Add(-time.Second)),        // 签名生效时间
+            NotBefore: jwt.NewNumericDate(now.Add(-clockSkewTolerance)), // 签名生效时间（允许少量时钟偏差）
             ExpiresAt: jwt.NewNumericDate(expiresAt),                    // 过期时间一周
             Issuer:    "chao-da-ye",                  // 签名的发行者
         },
