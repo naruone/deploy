@@ -7,7 +7,7 @@ import (
     "deploy/utils"
     "encoding/json"
     "errors"
-    uuid "github.com/satori/go.uuid"
+    "github.com/google/uuid"
     "path"
     "strconv"
     "strings"
@@ -155,7 +155,7 @@ func deployScheduleStart(prepareTask *model.TaskPrepare) {
         Env:         prepareTask.Env,
         Project:     prepareTask.Project,
         ResChan:     make(chan *model.DeployTaskResult),
-        PackageUuid: uuid.NewV4().String(),
+        PackageUuid: uuid.NewString(),
     }
     params.PackageName = params.PackageUuid + ".tar.gz"
     params.DstPath = strings.TrimRight(config.GConfig.ServerWorkDir, "/") + "/" + params.PackageUuid

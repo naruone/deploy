@@ -6,7 +6,7 @@ import (
     "deploy/model/request"
     "deploy/utils"
     "errors"
-    "github.com/dgrijalva/jwt-go"
+    "github.com/golang-jwt/jwt/v4"
     "github.com/gin-gonic/gin"
     "time"
 )
@@ -73,21 +73,20 @@ func (j *JWT) ParseToken(tokenString string) (*request.CustomClaims, error) {
         token *jwt.Token
         err   error
     )
-    token, err = jwt.ParseWithClaims(tokenString, &request.CustomClaims{}, func(token *jwt.Token) (i interface{}, e error) {
+    token, err = jwt.ParseWithClaims(tokenString, &request.CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
         return j.SigningKey, nil
     })
     if err != nil {
-        if ve, ok := err.(*jwt.ValidationError); ok {
-            if ve.Errors&jwt.ValidationErrorMalformed != 0 {
-                return nil, TokenMalformed
-            } else if ve.Errors&jwt.ValidationErrorExpired != 0 {
-                return nil, TokenExpired
-            } else if ve.Errors&jwt.ValidationErrorNotValidYet != 0 {
-                return nil, TokenNotValidYet
-            } else {
-                return nil, TokenInvalid
-            }
+        if errors.Is(err, jwt.ErrTokenMalformed) {
+            return nil, TokenMalformed
         }
+        if errors.Is(err, jwt.ErrTokenExpired) {
+            return nil, TokenExpired
+        }
+        if errors.Is(err, jwt.ErrTokenNotValidYet) {
+            return nil, TokenNotValidYet
+        }
+        return nil, TokenInvalid
     }
     if token != nil {
         if claims, ok := token.Claims.(*request.CustomClaims); ok && token.Valid {
@@ -104,18 +103,24 @@ func SignToken(userModel *model.User) (int64, string, error) {
         myJwt     *JWT
         tokenSign *jwt.Token
     )
+    const (
+        clockSkewLeeway = 30 * time.Second
+        tokenTTL        = 7 * 24 * time.Hour
+    )
     myJwt = NewJWT()
-    clams := request.CustomClaims{
+    now := time.Now()
+    expiresAt := now.Add(tokenTTL)
+    claims := request.CustomClaims{
         ID:       userModel.UserId,
         NickName: userModel.NickName,
-        StandardClaims: jwt.StandardClaims{
-            NotBefore: time.Now().Unix() - 1000,      // 签名生效时间
-            ExpiresAt: time.Now().Unix() + 24*3600*7, // 过期时间一周
+        RegisteredClaims: jwt.RegisteredClaims{
+            NotBefore: jwt.NewNumericDate(now.Add(-clockSkewLeeway)),    // 签名生效时间（允许少量时钟偏差）
+            ExpiresAt: jwt.NewNumericDate(expiresAt),                    // 过期时间一周
             Issuer:    "chao-da-ye",                  // 签名的发行者
         },
     }
 
-    tokenSign = jwt.NewWithClaims(jwt.SigningMethodHS256, clams)
+    tokenSign = jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
     token, err := tokenSign.SignedString(myJwt.SigningKey)
-    return clams.StandardClaims.ExpiresAt * 1000, token, err
+    return expiresAt.Unix() * 1000, token, err
 }

@@ -9,7 +9,7 @@ jobs:
                 - master
         docker:
             # specify the version
-            -   image: circleci/golang:1.14
+            -   image: cimg/go:1.23
         working_directory: /go/src/github.com/{{ORG_NAME}}/{{REPO_NAME}}
         steps:
             - checkout

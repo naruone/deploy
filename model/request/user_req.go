@@ -1,6 +1,6 @@
 package request
 
-import "github.com/dgrijalva/jwt-go"
+import "github.com/golang-jwt/jwt/v4"
 
 type LoginStruct struct {
     Username  string `json:"username"`
@@ -12,7 +12,7 @@ type LoginStruct struct {
 type CustomClaims struct {
     ID       uint
     NickName string
-    jwt.StandardClaims
+    jwt.RegisteredClaims
 }
 
 type ModifyPwd struct {
